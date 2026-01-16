@@ -1,23 +1,22 @@
 name: Vitis Tcl Build (Windows)
 
 on:
-  push:
-    paths:
-      - '2026_Spring/lab0/**'
-      - '2026_Spring/lab1/**'
-      - '2026_Spring/lab2/**'
-      - '2026_Spring/lab3/**'
-      - '2026_Spring/lab4/**'
-      - '.github/workflows/**'
-  pull_request:
-      paths:
-        - '2026_Spring/lab0/**'
-        - '2026_Spring/lab1/**'
-        - '2026_Spring/lab2/**'
-        - '2026_Spring/lab3/**'
-        - '2026_Spring/lab4/**'
-        - '.github/workflows/**'
   workflow_dispatch:
+    inputs:
+      lab:
+        description: "Which lab to build"
+        required: true
+        type: choice
+        options:
+          - lab0
+          - lab1
+          - lab2
+          - lab3
+          - lab4
+      make_target:
+        description: "Make target"
+        required: false
+        default: "all"
 
 jobs:
   build:
@@ -27,22 +26,58 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Run Vitis Tcl (batch)
+      - name: Build selected lab (make + Vitis)
         shell: cmd
         run: |
           @echo on
+          setlocal enabledelayedexpansion
+
+          set LAB=${{ inputs.lab }}
+          set MAKE_TARGET=${{ inputs.make_target }}
+
           mkdir logs 2>nul
-          vitis -version > logs\vitis_version.txt 2>&1
-          where vitis >> logs\vitis_version.txt 2>&1
+          mkdir out 2>nul
+
+          echo Building %LAB% > logs\run.txt
+          echo Make target: %MAKE_TARGET% >> logs\run.txt
+
+          rem ---- Run make in the lab directory ----
+          pushd 2026_Spring\%LAB%
+          if "%MAKE_TARGET%"=="" (
+            make > ..\..\logs\%LAB%_make.log 2>&1
+          ) else (
+            make %MAKE_TARGET% > ..\..\logs\%LAB%_make.log 2>&1
+          )
+
+          if errorlevel 1 (
+            echo MAKE FAILED
+            type ..\..\logs\%LAB%_make.log
+            popd
+            exit /b 1
+          )
+          popd
+
+          rem ---- Run Vitis Tcl ----
+          vitis -mode batch ^
+            -source scripts\build.tcl ^
+            -tclargs 2026_Spring\%LAB% out\%LAB% ^
+            > logs\%LAB%_vitis.log 2>&1
+
+          if errorlevel 1 (
+            echo VITIS FAILED
+            type logs\%LAB%_vitis.log
+            exit /b 1
+          )
 
       - name: Upload logs
         uses: actions/upload-artifact@v4
         with:
-          name: vitis-logs
+          name: vitis-logs-${{ inputs.lab }}
           path: logs/
 
       - name: Upload outputs
         uses: actions/upload-artifact@v4
         with:
-          name: vitis-out
+          name: vitis-out-${{ inputs.lab }}
           path: out/
+
