@@ -1,0 +1,48 @@
+name: Vitis Tcl Build (Windows)
+
+on:
+  push:
+    paths:
+      - '2026_Spring/lab0/**'
+      - '2026_Spring/lab1/**'
+      - '2026_Spring/lab2/**'
+      - '2026_Spring/lab3/**'
+      - '2026_Spring/lab4/**'
+      - '.github/workflows/**'
+  pull_request:
+      paths:
+        - '2026_Spring/lab0/**'
+        - '2026_Spring/lab1/**'
+        - '2026_Spring/lab2/**'
+        - '2026_Spring/lab3/**'
+        - '2026_Spring/lab4/**'
+        - '.github/workflows/**'
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: [self-hosted, windows]
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Run Vitis Tcl (batch)
+        shell: cmd
+        run: |
+          @echo on
+          mkdir logs 2>nul
+          vitis -version > logs\vitis_version.txt 2>&1
+          where vitis >> logs\vitis_version.txt 2>&1
+
+      - name: Upload logs
+        uses: actions/upload-artifact@v4
+        with:
+          name: vitis-logs
+          path: logs/
+
+      - name: Upload outputs
+        uses: actions/upload-artifact@v4
+        with:
+          name: vitis-out
+          path: out/
