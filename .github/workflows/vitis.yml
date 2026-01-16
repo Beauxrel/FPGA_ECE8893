@@ -35,6 +35,8 @@ jobs:
 
           mkdir logs 2>nul
           mkdir out 2>nul
+          echo %cd%
+          cd
 
           rem ---- Move into lab0 ----
           cd 2026_Spring\lab0 || exit /b 1
