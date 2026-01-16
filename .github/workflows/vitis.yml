@@ -37,7 +37,7 @@ jobs:
           mkdir out 2>nul
           cd 2026_Spring\lab0
           make
-          run result.out || exit /b 1
+          .\result.out || exit /b 1
           vitis-run --tcl script.tcl
 
       - name: Upload logs
