@@ -34,7 +34,7 @@ jobs:
           pwd
           ls -la
           cd 2026_Spring
-          ls- la
+          ls -la
           cd lab0
           
           make > ../../logs/build.log 2>&1 || exit 1
