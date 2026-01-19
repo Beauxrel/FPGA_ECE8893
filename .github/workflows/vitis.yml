@@ -29,11 +29,11 @@ jobs:
 
       - name: Run Vitis Tcl (batch)
         # Bash is the default shell for Linux runners
-        run: |
-
+        run:  
           pwd
+          ls -la
           
-          cd ../2026_Spring/lab0
+          cd 2026_Spring/lab0
           
           make > ../../logs/build.log 2>&1 || exit 1
           
