@@ -62,7 +62,7 @@ jobs:
 
           echo "✅ TEST PASSED detected — continuing"
 
-          vitis-run --tcl script.tcl
+          vitis-run --tcl -j 32 script.tcl
 
 
       - name: Upload logs
