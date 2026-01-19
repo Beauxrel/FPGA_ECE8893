@@ -27,7 +27,10 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
       - name: Add directory to PATH
-        run: echo "/tools/Xilinx/2025.1/Vitis/bin/vitis-run" >> $GITHUB_PATH
+        run: |
+          echo "/tools/Xilinx/2025.1/Vitis/bin/vitis-run" >> $GITHUB_PATH
+          echo $GITHUB_PATH
+          echo $PATH
 
       - name: Build and test (gate on TEST PASSED)
         shell: bash
