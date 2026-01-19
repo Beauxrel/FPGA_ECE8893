@@ -56,8 +56,6 @@ jobs:
 
           echo "✅ TEST PASSED detected — continuing"
 
-          which vitis-run || echo "vitis-run not in PATH"
-
           vitis-run --tcl script.tcl
 
 
