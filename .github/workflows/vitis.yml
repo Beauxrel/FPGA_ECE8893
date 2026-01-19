@@ -27,43 +27,36 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Prepare directories
+      - name: Run Vitis Tcl (batch)
+        # Bash is the default shell for Linux runners
         run: |
           mkdir -p logs out
 
-      - name: Run Vitis Tcl (batch)
-        shell: bash
-        working-directory: 2026_Spring/lab0
-        run: |
-          set -euo pipefail
+          cd 2026_Spring/lab0
+          
+          make > ../../logs/build.log 2>&1 || exit 1
+          
+          chmod +x ./result.out
+              # Run test and capture output
+          ./result.out | tee ../../logs/result.log
 
-          echo "Working directory:"
-          pwd
-          ls -la
-
-          echo "Running make..."
-          make > ../../logs/build.log 2>&1
-
-          if [[ ! -f result.out ]]; then
-            echo "ERROR: result.out not generated"
+          # Gate on success string
+          if ! grep -q "TEST PASSED" ../../logs/result.log; then
+            echo "❌ TEST PASSED not found — failing workflow"
             exit 1
           fi
 
-          chmod +x result.out
-          ./result.out >> ../../logs/result.log 2>&1
-
-          echo "Running Vitis..."
+          echo "✅ TEST PASSED detected — continuing"
+                
           vitis-run --tcl script.tcl >> ../../logs/vitis-run.log 2>&1
 
       - name: Upload logs
-        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: vitis-logs
           path: logs/
 
       - name: Upload outputs
-        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: vitis-out
