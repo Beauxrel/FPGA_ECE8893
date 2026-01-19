@@ -1,4 +1,4 @@
-name: Vitis Tcl Build (Windows)
+name: Vitis Tcl Build (Linux)
 
 on:
   push:
@@ -21,7 +21,7 @@ on:
 
 jobs:
   build:
-    runs-on: [self-hosted, windows]
+    runs-on: [self-hosted, linux]
 
     steps:
       - name: Checkout
