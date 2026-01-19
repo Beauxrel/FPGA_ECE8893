@@ -36,9 +36,15 @@ jobs:
           mkdir logs 2>nul
           mkdir out 2>nul
           cd 2026_Spring\lab0
-          make
-          .\result.out || exit /b 1
-          vitis-run --tcl script.tcl
+          
+          # Run make and capture its output to logs/result.log
+          make > ../logs/build.log 2>&1 || exit /b 1
+          
+          # Run result.out and redirect its output to logs/result.log
+          ./result.out >> ../logs/result.log 2>&1 || exit /b 1
+          
+          # Run vitis-run and capture its output as well
+          vitis-run --tcl script.tcl >> ../logs/vitis-run.log 2>&1
 
       - name: Upload logs
         uses: actions/upload-artifact@v4
