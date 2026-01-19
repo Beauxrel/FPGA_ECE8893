@@ -30,20 +30,16 @@ jobs:
       - name: Run Vitis Tcl (batch)
         # Bash is the default shell for Linux runners
         run: |
-          # Use -p to create directories only if they don't exist without errors
+
           mkdir -p logs out
           
-          # Navigate using forward slashes
           cd 2026_Spring/lab0
           
-          # Run make and capture output
           make > ../../logs/build.log 2>&1 || exit 1
           
-          # Ensure execution permission for the output binary
           chmod +x ./result.out
           ./result.out >> ../../logs/result.log 2>&1 || exit 1
           
-          # Run vitis-run with Linux path syntax
           vitis-run --tcl script.tcl >> ../../logs/vitis-run.log 2>&1
 
       - name: Upload logs
