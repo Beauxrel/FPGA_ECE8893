@@ -1,4 +1,4 @@
-name: Vitis Tcl Build (Linux)
+name: Vitis Tcl Build (Linux 22.04)
 
 on:
   push:
