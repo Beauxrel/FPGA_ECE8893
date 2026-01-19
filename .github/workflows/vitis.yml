@@ -76,3 +76,9 @@ jobs:
         with:
           name: vitis-out
           path: out/
+          
+      - name: Upload top_kernel_csynth report
+        uses: actions/upload-artifact@v4
+        with:
+          name: top_kernel_csynth-report
+          path: 2026_Spring/lab0/hls/syn/report/top_kernel_csynth.rpt
