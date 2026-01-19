@@ -30,8 +30,6 @@ jobs:
       - name: Run Vitis Tcl (batch)
         # Bash is the default shell for Linux runners
         run: |
-
-          mkdir -p logs out
           
           cd 2026_Spring/lab0
           
