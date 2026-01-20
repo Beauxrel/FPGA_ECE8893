@@ -8,7 +8,7 @@ IFLAG += -g
 CFLAG += -fPIC -O0
 CFLAG += -lm
 CFLAG += -std=c++11 -Wno-unused-result
-CFLAGS += -I$(XILINX_VIVADO)/include
+CFLAGS += -I$(XILINX_VITIS)/include
 
 all:
 	g++ *.cpp -o result $(CFLAG) $(IFLAG)
