@@ -1,4 +1,4 @@
-AUTOPILOT_ROOT :=/tools/software/xilinx/latest/Vitis
+AUTOPILOT_ROOT :=/tools/Xilinx/2025.1/Vitis
 
 IFLAG += -I "${AUTOPILOT_ROOT}/include"
 IFLAG += -D__SIM_FPO__ -D__SIM_OPENCV__ -D__SIM_FFT__ 
@@ -8,7 +8,6 @@ IFLAG += -g
 CFLAG += -fPIC -O0
 CFLAG += -lm
 CFLAG += -std=c++11 -Wno-unused-result
-CFLAGS += -I /tools/Xilinx/2025.1/Vitis/include
 
 all:
 	g++ *.cpp -o result $(CFLAG) $(IFLAG)
