@@ -25,7 +25,7 @@ cosim_design
 # Note: -flow syn performs RTL synthesis; 
 # -flow impl performs both RTL synthesis and implementation, including a detailed place and route of the RTL netlist.
 # implementation flow will take much longer time
-export_design -format ip_catalog -flow impl
+export_design -format ip_catalog
 #export_design -format ip_catalog -flow impl
 
 exit
