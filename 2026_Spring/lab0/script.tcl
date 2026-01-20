@@ -1,10 +1,5 @@
 open_component project_1
 
-# Max CPU
-set_param general.maxThreads 32
-get_param general.maxThreads
-
-
 # set top function of the HLS design
 set_top top_kernel
 
