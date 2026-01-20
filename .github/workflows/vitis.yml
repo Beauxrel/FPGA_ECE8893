@@ -29,8 +29,11 @@ jobs:
       - name: Add directory to PATH
         run: |
           echo "/tools/Xilinx/2025.1/Vitis/bin" >> $GITHUB_PATH
-          echo "/tools/Xilinx/2025.1/Vitis/include" >> $GITHUB_PATH
-          echo "/tools/Xilinx/2025.1/Vivado" >> $GITHUB_PATH
+          source /tools/Xilinx/2025.1/Vitis/settings64.sh
+          source /tools/Xilinx/2025.1/Vivado/settings64.sh
+          source /tools/Xilinx/2025.1/Vivado/.settings64-Vivado.sh
+          source /tools/Xilinx/2025.1/Vitis/.settings64-Vitis.sh
+
           echo $GITHUB_PATH
           echo $PATH
 
