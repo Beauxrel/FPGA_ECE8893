@@ -39,7 +39,7 @@ jobs:
 
           echo $PATH
           mkdir -p logs out
-          cd 2026_Spring/lab0
+          cd 2026_Spring/lab1
 
           echo "Running make..."
           make
@@ -81,16 +81,16 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: top_kernel_csynth-report
-          path: 2026_Spring/lab0/project_1/hls/syn/report/top_kernel_csynth.rpt
+          path: 2026_Spring/lab1/project_1/hls/syn/report/top_kernel_csynth.rpt
           
       - name: C/RTL Co-Simulation Report
         uses: actions/upload-artifact@v4
         with:
           name: top_kernel_cosim-report
-          path: 2026_Spring/lab0/project_1/hls/sim/report/top_kernel_cosim.rpt
+          path: 2026_Spring/lab1/project_1/hls/sim/report/top_kernel_cosim.rpt
           
       - name: Post-Implementation Report (Place & Route)
         uses: actions/upload-artifact@v4
         with:
           name: top_kernel_export-report
-          path: 2026_Spring/lab0/project_1/hls/impl/report/verilog/top_kernel_export.rpt
+          path: 2026_Spring/lab1/project_1/hls/impl/report/verilog/top_kernel_export.rpt
