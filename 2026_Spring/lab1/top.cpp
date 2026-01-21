@@ -21,7 +21,7 @@ void top_kernel(data_t A[N_ROWS][N_COLS],
         data_t denom = row_sum + (data_t)1.0;
 
         // Normalize each element in the row
-        vnormalize: for (int j = 0; j < N_COLS; j++) {
+        for (int j = 0; j < N_COLS; j++) {
             tmp[i][j] = A[i][j] / denom;
         }
     }

@@ -68,7 +68,17 @@ jobs:
           echo "✅ TEST PASSED detected — continuing"
 
           vitis-run --tcl script.tcl
+      - name: echo C synth report
+        run: |
+          echo 2026_Spring/lab1/project_1/hls/syn/report/top_kernel_csynth.rpt
 
+      - name: echo C/RTL Co-Simulation Report
+        run: |
+          echo 2026_Spring/lab1/project_1/hls/sim/report/top_kernel_cosim.rpt
+
+      - name: echo Post-Implementation Report (Place & Route)
+        run: |
+          echo 2026_Spring/lab1/project_1/hls/impl/report/verilog/top_kernel_export.rpt    
 
       - name: Upload logs
         uses: actions/upload-artifact@v4
@@ -82,20 +92,20 @@ jobs:
           name: vitis-out
           path: out/
           
-      - name: C Synthesis Report
-        uses: actions/upload-artifact@v4
-        with:
-          name: top_kernel_csynth-report
-          path: 2026_Spring/lab1/project_1/hls/syn/report/top_kernel_csynth.rpt
+#      - name: C Synthesis Report
+#        uses: actions/upload-artifact@v4
+#        with:
+#          name: top_kernel_csynth-report
+#          path: 2026_Spring/lab1/project_1/hls/syn/report/top_kernel_csynth.rpt
           
-      - name: C/RTL Co-Simulation Report
-        uses: actions/upload-artifact@v4
-        with:
-          name: top_kernel_cosim-report
-          path: 2026_Spring/lab1/project_1/hls/sim/report/top_kernel_cosim.rpt
+#      - name: C/RTL Co-Simulation Report
+#        uses: actions/upload-artifact@v4
+#        with:
+#          name: top_kernel_cosim-report
+#          path: 2026_Spring/lab1/project_1/hls/sim/report/top_kernel_cosim.rpt
           
-      - name: Post-Implementation Report (Place & Route)
-        uses: actions/upload-artifact@v4
-        with:
-          name: top_kernel_export-report
-          path: 2026_Spring/lab1/project_1/hls/impl/report/verilog/top_kernel_export.rpt
+#      - name: Post-Implementation Report (Place & Route)
+#        uses: actions/upload-artifact@v4
+#        with:
+#          name: top_kernel_export-report
+#          path: 2026_Spring/lab1/project_1/hls/impl/report/verilog/top_kernel_export.rpt
