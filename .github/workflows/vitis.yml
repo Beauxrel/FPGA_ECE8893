@@ -70,15 +70,15 @@ jobs:
           vitis-run --tcl script.tcl
       - name: echo C synth report
         run: |
-          echo 2026_Spring/lab1/project_1/hls/syn/report/top_kernel_csynth.rpt
+          cat 2026_Spring/lab1/project_1/hls/syn/report/top_kernel_csynth.rpt
 
       - name: echo C/RTL Co-Simulation Report
         run: |
-          echo 2026_Spring/lab1/project_1/hls/sim/report/top_kernel_cosim.rpt
+          cat 2026_Spring/lab1/project_1/hls/sim/report/top_kernel_cosim.rpt
 
       - name: echo Post-Implementation Report (Place & Route)
         run: |
-          echo 2026_Spring/lab1/project_1/hls/impl/report/verilog/top_kernel_export.rpt    
+          cat 2026_Spring/lab1/project_1/hls/impl/report/verilog/top_kernel_export.rpt    
 
       - name: Upload logs
         uses: actions/upload-artifact@v4
