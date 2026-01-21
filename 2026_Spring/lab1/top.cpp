@@ -12,7 +12,8 @@ void top_kernel(data_t A[N_ROWS][N_COLS],
         data_t row_sum = 0.0;
 
         // Compute row sum
-        for (int j = 0; j < N_COLS; j++) {
+        compute_row: for (int j = 0; j < N_COLS; j++) {
+            #pragma HLS PIPELINE
             row_sum += A[i][j];
         }
 
@@ -20,7 +21,7 @@ void top_kernel(data_t A[N_ROWS][N_COLS],
         data_t denom = row_sum + (data_t)1.0;
 
         // Normalize each element in the row
-        for (int j = 0; j < N_COLS; j++) {
+        vnormalize: for (int j = 0; j < N_COLS; j++) {
             tmp[i][j] = A[i][j] / denom;
         }
     }
