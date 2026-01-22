@@ -13,7 +13,6 @@ void top_kernel(data_t A[N_ROWS][N_COLS],
 
         // Compute row sum
         compute_row: for (int j = 0; j < N_COLS; j++) {
-            #pragma HLS PIPELINE
             row_sum += A[i][j];
         }
 
