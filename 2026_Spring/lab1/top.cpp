@@ -9,7 +9,7 @@ void top_kernel(data_t A[N_ROWS][N_COLS],
 
     // Phase 1: Row-wise normalization
     phase_1: for (int i = 0; i < N_ROWS; i++) {
-        #pragma HLS PIPELINE II=16
+        #pragma HLS PIPELINE II=4
         data_t row_sum = 0.0;
 
         // Compute row sum!
