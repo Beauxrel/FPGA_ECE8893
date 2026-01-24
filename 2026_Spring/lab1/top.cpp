@@ -1,5 +1,6 @@
 #include "dcl.h"
 
+typedef ap_fixed<40, 18, AP_RND, AP_SAT> acc_t;
 // Baseline implementation for HLS with Phase 2 access changed to row-wise apply.
 // (No reciprocal-multiply optimizations; divisions remain as requested.)
 void top_kernel(data_t A[N_ROWS][N_COLS],
