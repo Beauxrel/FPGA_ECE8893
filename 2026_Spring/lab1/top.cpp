@@ -9,7 +9,7 @@ void top_kernel(data_t A[N_ROWS][N_COLS],
 
     // Phase 1: Row-wise normalization
     phase_1: for (int i = 0; i < N_ROWS; i++) {
-        #pragma HLS loop_merge force
+        #pragma HLS loop_flatten
         data_t row_sum = 0.0;
 
         // Compute row sum!
@@ -30,7 +30,7 @@ void top_kernel(data_t A[N_ROWS][N_COLS],
 
     // Phase 2: Column-wise scaling
     for (int j = 0; j < N_COLS; j++) {
-        #pragma HLS loop_merge force
+        #pragma HLS loop_flatten
         data_t col_sum = 0.0;
 
         // Compute column sum of normalized values
