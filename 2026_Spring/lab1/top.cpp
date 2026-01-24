@@ -33,6 +33,7 @@ void top_kernel(data_t A[N_ROWS][N_COLS],
 
         // Compute column sum of normalized values
         for (int i = 0; i < N_ROWS; i++) {
+            #pragma HLS PIPELINE II=1
             col_sum += tmp[i][j];
         }
 
@@ -41,6 +42,7 @@ void top_kernel(data_t A[N_ROWS][N_COLS],
 
         // Apply scale to each element in the column
         for (int i = 0; i < N_ROWS; i++) {
+            #pragma HLS PIPELINE II=1
             C[i][j] = tmp[i][j] * scale;
         }
     }
