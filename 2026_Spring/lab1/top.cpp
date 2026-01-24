@@ -24,7 +24,7 @@ void top_kernel(data_t A[N_ROWS][N_COLS],
         // Normalize each element in the row
         norm_row: for (int j = 0; j < N_COLS; j++) {
             #pragma HLS PIPELINE II=1
-            #pragma HLS unroll factor=8
+            #pragma HLS unroll factor=32
             tmp[i][j] = A[i][j] / denom;
         }
     }
@@ -46,7 +46,7 @@ void top_kernel(data_t A[N_ROWS][N_COLS],
         // Apply scale to each element in the column
         for (int i = 0; i < N_ROWS; i++) {
             #pragma HLS PIPELINE II=1
-            #pragma HLS unroll factor=8
+            #pragma HLS unroll factor=32
             C[i][j] = tmp[i][j] * scale;
         }
     }
