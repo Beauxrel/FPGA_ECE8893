@@ -11,7 +11,7 @@ void top_kernel(data_t A[N_ROWS][N_COLS],
     for (int i = 0; i < N_ROWS; i++) {
         data_t row_sum = 0.0;
 
-        // Compute row sum
+        // Compute row sum!
         compute_row: for (int j = 0; j < N_COLS; j++) {
             row_sum += A[i][j];
         }
