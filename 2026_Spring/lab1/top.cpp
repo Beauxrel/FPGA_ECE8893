@@ -10,7 +10,6 @@ void top_kernel(data_t A[N_ROWS][N_COLS],
     #pragma HLS ARRAY_PARTITION variable=A   cyclic factor=16 dim=2
     #pragma HLS ARRAY_PARTITION variable=C   cyclic factor=16 dim=2
 
-    #pragma HLS loop_flatten
     // Phase 1: Row-wise normalization
     phase_1: for (int i = 0; i < N_ROWS; i++) {
         data_t row_sum = 0.0;
@@ -26,17 +25,16 @@ void top_kernel(data_t A[N_ROWS][N_COLS],
         #pragma HLS PIPELINE II=1
         #pragma HLS unroll factor=16
         norm_row: for (int j = 0; j < N_COLS; j++) {
-            #pragma HLS unroll factor=16
             tmp[i][j] = A[i][j] / row_sum + (data_t)1.0;
         }
     }
 
     // Phase 2: Column-wise scaling
     for (int j = 0; j < N_COLS; j++) {
-        #pragma HLS loop_flatten
         data_t col_sum = 0.0;
         // Compute column sum of normalized values
         #pragma HLS PIPELINE II=1
+        #pragma HLS unroll factor=16
         compute_col: for (int i = 0; i < N_ROWS; i++) {
             col_sum += tmp[i][j];
         }
