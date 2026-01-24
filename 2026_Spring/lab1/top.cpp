@@ -9,12 +9,12 @@ void top_kernel(data_t A[N_ROWS][N_COLS],
 
     // Phase 1: Row-wise normalization
     phase_1: for (int i = 0; i < N_ROWS; i++) {
-        #pragma HLS PIPELINE II=4
+        #pragma HLS loop_merge force
         data_t row_sum = 0.0;
 
         // Compute row sum!
         compute_row: for (int j = 0; j < N_COLS; j++) {
-            //#pragma HLS PIPELINE II=1
+            #pragma HLS PIPELINE II=1
             row_sum += A[i][j];
         }
 
@@ -23,19 +23,19 @@ void top_kernel(data_t A[N_ROWS][N_COLS],
 
         // Normalize each element in the row
         norm_row: for (int j = 0; j < N_COLS; j++) {
-            //#pragma HLS PIPELINE II=1
+            #pragma HLS PIPELINE II=1
             tmp[i][j] = A[i][j] / denom;
         }
     }
 
     // Phase 2: Column-wise scaling
     for (int j = 0; j < N_COLS; j++) {
-        #pragma HLS PIPELINE II=16
+        #pragma HLS loop_merge force
         data_t col_sum = 0.0;
 
         // Compute column sum of normalized values
         for (int i = 0; i < N_ROWS; i++) {
-            //#pragma HLS PIPELINE II=1
+            #pragma HLS PIPELINE II=1
             col_sum += tmp[i][j];
         }
 
@@ -44,7 +44,7 @@ void top_kernel(data_t A[N_ROWS][N_COLS],
 
         // Apply scale to each element in the column
         for (int i = 0; i < N_ROWS; i++) {
-            //#pragma HLS PIPELINE II=1
+            #pragma HLS PIPELINE II=1
             C[i][j] = tmp[i][j] * scale;
         }
     }
