@@ -18,8 +18,12 @@ void top_kernel(data_t A[N_ROWS][N_COLS],
         // Compute row sum!
         compute_row: for (int j = 0; j < N_COLS; j++) {
             #pragma HLS PIPELINE II=1
-            row_sum += A[i][j];
+            data_t v = A[i][j];
+            rowbuf[j] = v;
+            row_sum += (acc_t)v;
         }
+
+        acc_t inv = (acc_t)1.0 / (row_sum + (acc_t)1.0);
 
         // Avoid division by zero, add small bias
         data_t denom = row_sum + (data_t)1.0;
@@ -28,7 +32,7 @@ void top_kernel(data_t A[N_ROWS][N_COLS],
         norm_row: for (int j = 0; j < N_COLS; j++) {
             #pragma HLS PIPELINE II=1
             #pragma HLS unroll factor=16
-            tmp[i][j] = A[i][j] / denom;
+            tmp[i][j] = (data_t)((acc_t)rowbuf[j] * inv);
         }
     }
 
@@ -40,7 +44,9 @@ void top_kernel(data_t A[N_ROWS][N_COLS],
         // Compute column sum of normalized values
         for (int i = 0; i < N_ROWS; i++) {
             #pragma HLS PIPELINE II=1
-            col_sum += tmp[i][j];
+            w = tmp[i][j];
+            rowbuf[i] = w;
+            col_sum += (acc_t)w;
         }
 
         // Compute average as scale
