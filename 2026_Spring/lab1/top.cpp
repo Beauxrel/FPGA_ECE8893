@@ -1,3 +1,5 @@
+#include "dcl.h"
+
 void top_kernel(data_t A[N_ROWS][N_COLS],
                 data_t C[N_ROWS][N_COLS]) {
   static data_t tmp[N_ROWS][N_COLS];
