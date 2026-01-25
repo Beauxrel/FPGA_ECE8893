@@ -15,6 +15,7 @@ void top_kernel(data_t A[N_ROWS][N_COLS],
 
     // Phase 1: Row-wise normalization
     phase_1: for (int i = 0; i < N_ROWS; i++) {
+        data_t row_buf[N_COLS];
         data_t row_sum = 0.0;
 
         // Compute row sum!
