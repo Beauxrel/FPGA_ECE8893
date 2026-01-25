@@ -23,7 +23,7 @@ void top_kernel(data_t A[N_ROWS][N_COLS],
 
         // Avoid division by zero, add small bias
         data_t denom = row_sum + (data_t)1.0;
-        data_t recip = 1.0 / denom;
+        data_t recip = (data_t)1.0 / denom;
 
         // Normalize each element in the row
         norm_row: for (int j = 0; j < N_COLS; j++) {
