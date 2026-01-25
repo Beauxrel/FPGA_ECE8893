@@ -35,7 +35,7 @@ void top_kernel(data_t A[N_ROWS][N_COLS],
         norm_row: for (int j = 0; j < N_COLS; j++) {
 #pragma HLS PIPELINE II=1
 #pragma HLS unroll factor=4
-            tmp[i][j] = row_buf[j] / denom;
+            tmp[i][j] = A[i][j] / denom;
         }
     }
 
