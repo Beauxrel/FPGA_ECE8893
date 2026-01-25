@@ -17,7 +17,7 @@ void top_kernel(data_t A[N_ROWS][N_COLS],
         // Compute row sum!
         compute_row: for (int j = 0; j < N_COLS; j++) {
 #pragma HLS PIPELINE II=1
-#pragma HLS unroll factor=32
+#pragma HLS unroll factor=16
             row_sum += A[i][j];
         }
 
@@ -38,7 +38,7 @@ void top_kernel(data_t A[N_ROWS][N_COLS],
         // Compute column sum of normalized values
         for (int i = 0; i < N_ROWS; i++) {
 #pragma HLS PIPELINE II=1
-#pragma HLS unroll factor=32
+#pragma HLS unroll factor=16
             col_sum += tmp[i][j];
         }
 
