@@ -6,7 +6,7 @@ void top_kernel(data_t A[N_ROWS][N_COLS],
                 data_t C[N_ROWS][N_COLS]) {
     // Intermediate buffer for row-normalized values
     static data_t tmp[N_ROWS][N_COLS];
-
+#pragma HLS BIND_STORAGE variable=tmp type=ram_s2p impl=bram
 #pragma HLS ARRAY_PARTITION variable=tmp cyclic factor=32 dim=1
 #pragma HLS ARRAY_PARTITION variable=A   cyclic factor=32 dim=2
 #pragma HLS ARRAY_PARTITION variable=C   cyclic factor=32 dim=1
@@ -29,7 +29,7 @@ void top_kernel(data_t A[N_ROWS][N_COLS],
         // Normalize each element in the row
         norm_row: for (int j = 0; j < N_COLS; j++) {
 #pragma HLS PIPELINE II=1
-#pragma HLS unroll factor=8
+#pragma HLS unroll factor=4
             tmp[i][j] = A[i][j] / denom;
         }
     }
