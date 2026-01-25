@@ -1,54 +1,75 @@
 #include "dcl.h"
 
-// Baseline implementation for HLS.
-// Students will optimize this (loops, memory access, etc.).
-void top_kernel(data_t A[N_ROWS][N_COLS],
-                data_t C[N_ROWS][N_COLS]) {
-    // Intermediate buffer for row-normalized values
-    static data_t tmp[N_ROWS][N_COLS];
-    #pragma HLS ARRAY_RESHAPE variable=tmp type=cyclic factor=8 dim=1
-    #pragma HLS ARRAY_PARTITION variable=A complete dim=2
-    #pragma HLS ARRAY_PARTITION variable=C complete dim=2
-
-    // Phase 1: Row-wise normalization
-    phase_1: for (int i = 0; i < N_ROWS; i++) {
-        
+// Phase 1: Row-wise normalization
+void row_normalize(data_t A[N_ROWS][N_COLS],
+                   data_t tmp[N_ROWS][N_COLS]) {
+#pragma HLS INLINE off
+    
+    for (int i = 0; i < N_ROWS; i++) {
+#pragma HLS PIPELINE II=1
         data_t row_sum = 0.0;
         
-        // Compute row sum!
-        compute_row: for (int j = 0; j < N_COLS; j++) {
-            #pragma UNROLL
+        // Compute row sum
+        for (int j = 0; j < N_COLS; j++) {
+#pragma HLS UNROLL
             row_sum += A[i][j];
         }
-
-        // Avoid division by zero, add small bias
+        
+        // Avoid division by zero
         data_t denom = row_sum + (data_t)1.0;
-
+        
         // Normalize each element in the row
-        norm_row: for (int j = 0; j < N_COLS; j++) {
-            #pragma HLS pipeline
+        for (int j = 0; j < N_COLS; j++) {
+#pragma HLS UNROLL
             tmp[i][j] = A[i][j] / denom;
         }
     }
+}
 
-    // Phase 2: Column-wise scaling
+// Phase 2: Column-wise scaling
+void column_scale(data_t tmp[N_ROWS][N_COLS],
+                  data_t C[N_ROWS][N_COLS]) {
+#pragma HLS INLINE off
+    
     for (int j = 0; j < N_COLS; j++) {
-        
+#pragma HLS PIPELINE II=1
         data_t col_sum = 0.0;
         
-        // Compute column sum of normalized values
+        // Compute column sum
         for (int i = 0; i < N_ROWS; i++) {
-            #pragma UNROLL
+#pragma HLS UNROLL
             col_sum += tmp[i][j];
         }
-
+        
         // Compute average as scale
         data_t scale = col_sum / (data_t)N_ROWS;
-
-        // Apply scale to each element in the column
+        
+        // Apply scale to each element
         for (int i = 0; i < N_ROWS; i++) {
-            #pragma HLS pipeline
+#pragma HLS UNROLL
             C[i][j] = tmp[i][j] * scale;
         }
     }
+}
+
+// Top-level kernel with dataflow
+void top_kernel(data_t A[N_ROWS][N_COLS],
+                data_t C[N_ROWS][N_COLS]) {
+    
+    // Intermediate buffer
+    static data_t tmp[N_ROWS][N_COLS];
+#pragma HLS ARRAY_PARTITION variable=tmp complete dim=2
+#pragma HLS ARRAY_PARTITION variable=tmp cyclic factor=8 dim=1
+    
+    // Partition input/output arrays
+#pragma HLS ARRAY_PARTITION variable=A complete dim=2
+#pragma HLS ARRAY_PARTITION variable=A cyclic factor=8 dim=1
+#pragma HLS ARRAY_PARTITION variable=C complete dim=2
+#pragma HLS ARRAY_PARTITION variable=C cyclic factor=8 dim=1
+    
+    // Enable dataflow between phases
+#pragma HLS DATAFLOW
+    
+    row_normalize(A, tmp);
+    column_scale(tmp, C);
 }
