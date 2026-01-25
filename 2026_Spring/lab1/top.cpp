@@ -6,9 +6,9 @@ void top_kernel(data_t A[N_ROWS][N_COLS],
                 data_t C[N_ROWS][N_COLS]) {
     // Intermediate buffer for row-normalized values
     static data_t tmp[N_ROWS][N_COLS];
-#pragma HLS ARRAY_PARTITION variable=tmp cyclic factor=8 dim=0
-#pragma HLS ARRAY_PARTITION variable=A   cyclic factor=8 dim=0
-#pragma HLS ARRAY_PARTITION variable=C   cyclic factor=8 dim=0
+#pragma HLS ARRAY_PARTITION variable=tmp complete dim=2
+#pragma HLS ARRAY_PARTITION variable=A   complete dim=2
+#pragma HLS ARRAY_PARTITION variable=C   complete dim=2
 
     // Phase 1: Row-wise normalization
     phase_1: for (int i = 0; i < N_ROWS; i++) {
@@ -17,7 +17,7 @@ void top_kernel(data_t A[N_ROWS][N_COLS],
         // Compute row sum!
         compute_row: for (int j = 0; j < N_COLS; j++) {
 #pragma HLS PIPELINE II=1
-#pragma HLS unroll factor=16
+#pragma HLS unroll factor=4
             row_sum += A[i][j];
         }
 
@@ -38,7 +38,7 @@ void top_kernel(data_t A[N_ROWS][N_COLS],
         // Compute column sum of normalized values
         for (int i = 0; i < N_ROWS; i++) {
 #pragma HLS PIPELINE II=1
-#pragma HLS unroll factor=16
+#pragma HLS unroll factor=4
             col_sum += tmp[i][j];
         }
 
