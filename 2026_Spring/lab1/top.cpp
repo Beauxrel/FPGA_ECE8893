@@ -6,7 +6,7 @@ void top_kernel(data_t A[N_ROWS][N_COLS],
                 data_t C[N_ROWS][N_COLS]) {
     // Intermediate buffer for row-normalized values
     static data_t tmp[N_ROWS][N_COLS];
-    static data_t row_buf[N_COLS];
+
 #pragma HLS INTERFACE m_axi port=A bundle=gmem0
 #pragma HLS INTERFACE m_axi port=C bundle=gmem1
 #pragma HLS INTERFACE s_axilite port=A bundle=control
