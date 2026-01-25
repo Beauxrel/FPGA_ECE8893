@@ -6,6 +6,7 @@ void top_kernel(data_t A[N_ROWS][N_COLS],
                 data_t C[N_ROWS][N_COLS]) {
     // Intermediate buffer for row-normalized values
     static data_t tmp[N_ROWS][N_COLS];
+    static data_t row_buf[N_COLS];
 #pragma HLS INTERFACE m_axi port=A bundle=gmem
 #pragma HLS INTERFACE m_axi port=C bundle=gmem
 #pragma HLS ARRAY_PARTITION variable=tmp cyclic factor=32 dim=1
@@ -15,7 +16,6 @@ void top_kernel(data_t A[N_ROWS][N_COLS],
 
     // Phase 1: Row-wise normalization
     phase_1: for (int i = 0; i < N_ROWS; i++) {
-        data_t row_buf[N_COLS];
         data_t row_sum = 0.0;
 
         // Compute row sum!
