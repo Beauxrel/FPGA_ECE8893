@@ -4,14 +4,13 @@
 |          |          |      min      |      avg      |      max      |      min      |      avg      |      max      |                      |
 +----------+----------+-----------------------------------------------+-----------------------------------------------+----------------------+
 |      VHDL|        NA|             NA|             NA|             NA|             NA|             NA|             NA|                    NA|
-|   Verilog|      Pass|          53122|          53122|          53122|             NA|             NA|             NA|                 53122|
+|   Verilog|      Pass|          32642|          32642|          32642|             NA|             NA|             NA|                 32642|
 +----------+----------+-----------------------------------------------+-----------------------------------------------+----------------------+
 
-#=== Final timing ===
+ #=== Final timing ===
 CP required:                     10.000
-CP achieved post-synthesis:      3.713
-CP achieved post-implementation: 5.291
+CP achieved post-synthesis:      4.477
+CP achieved post-implementation: 5.763
 Timing met
 
-
-0.000281069
+0.000188116
