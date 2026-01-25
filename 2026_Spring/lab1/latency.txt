@@ -9,8 +9,9 @@
 
 #=== Final timing ===
 CP required:                     10.000
-CP achieved post-synthesis:      4.290
-CP achieved post-implementation: 5.771
+CP achieved post-synthesis:      3.713
+CP achieved post-implementation: 5.291
 Timing met
 
-0.000306567
+
+0.000281069
