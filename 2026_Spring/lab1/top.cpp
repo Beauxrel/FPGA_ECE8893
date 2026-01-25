@@ -6,11 +6,9 @@ void top_kernel(data_t A[N_ROWS][N_COLS],
                 data_t C[N_ROWS][N_COLS]) {
     // Intermediate buffer for row-normalized values
     static data_t tmp[N_ROWS][N_COLS];
-    static data_t col_acc[N_COLS];
-//#pragma HLS ARRAY_PARTITION variable=tmp cyclic factor=32 dim=2
+#pragma HLS ARRAY_PARTITION variable=tmp cyclic factor=32 dim=2
 #pragma HLS ARRAY_PARTITION variable=A   cyclic factor=32 dim=2
 #pragma HLS ARRAY_PARTITION variable=C   cyclic factor=32 dim=2
-
 
     // Phase 1: Row-wise normalization
     phase_1: for (int i = 0; i < N_ROWS; i++) {
@@ -25,15 +23,12 @@ void top_kernel(data_t A[N_ROWS][N_COLS],
 
         // Avoid division by zero, add small bias
         data_t denom = row_sum + (data_t)1.0;
-        data_t inv = (data_t)1.0 / denom;
 
         // Normalize each element in the row
         norm_row: for (int j = 0; j < N_COLS; j++) {
 #pragma HLS PIPELINE II=1
 #pragma HLS unroll factor=4
-            data_t v = A[i][j] * inv;      // multiply instead of divide each element
-            tmp[i][j] = v;
-            col_acc[j] += v;
+            tmp[i][j] = A[i][j] / denom;
         }
     }
 
