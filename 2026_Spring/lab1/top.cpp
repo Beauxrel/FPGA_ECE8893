@@ -6,9 +6,9 @@ void top_kernel(data_t A[N_ROWS][N_COLS],
                 data_t C[N_ROWS][N_COLS]) {
     // Intermediate buffer for row-normalized values
     static data_t tmp[N_ROWS][N_COLS];
-#pragma HLS ARRAY_PARTITION variable=tmp cyclic factor=16 dim=2
-#pragma HLS ARRAY_PARTITION variable=A   cyclic factor=16 dim=2
-#pragma HLS ARRAY_PARTITION variable=C   cyclic factor=16 dim=2
+#pragma HLS ARRAY_PARTITION variable=tmp cyclic factor=4 dim=2
+#pragma HLS ARRAY_PARTITION variable=A   cyclic factor=4 dim=2
+#pragma HLS ARRAY_PARTITION variable=C   cyclic factor=4 dim=2
 
     // Phase 1: Row-wise normalization
     phase_1: for (int i = 0; i < N_ROWS; i++) {
