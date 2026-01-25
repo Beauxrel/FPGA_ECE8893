@@ -7,8 +7,9 @@ void top_kernel(data_t A[N_ROWS][N_COLS],
     // Intermediate buffer for row-normalized values
     static data_t tmp[N_ROWS][N_COLS];
 
-#pragma HLS interface m_axi depth=16384 port=A offset=slave bundle=memA
-#pragma HLS interface m_axi depth=16384 port=C offset=slave bundle=memC
+#pragma HLS ARRAY_PARTITION variable=tmp cyclic factor=32 dim=1
+#pragma HLS ARRAY_PARTITION variable=A   cyclic factor=32 dim=2
+#pragma HLS ARRAY_PARTITION variable=C   cyclic factor=32 dim=1
 
     // Phase 1: Row-wise normalization
     phase_1: for (int i = 0; i < N_ROWS; i++) {
@@ -28,8 +29,8 @@ void top_kernel(data_t A[N_ROWS][N_COLS],
         // Normalize each element in the row
         norm_row: for (int j = 0; j < N_COLS; j++) {
 #pragma HLS PIPELINE II=1
-#pragma HLS unroll factor=8
-            tmp[i][j] = A[i][j] * recip;
+#pragma HLS unroll factor=4
+            tmp[i][j] = A[i][j] / denom;
         }
     }
 
