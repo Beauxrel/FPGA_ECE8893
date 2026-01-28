@@ -4,7 +4,11 @@
 // Students will optimize this (loops, memory access, etc.).
 void top_kernel(data_t A_DRAM[N_ROWS][N_COLS],
                 data_t C_DRAM[N_ROWS][N_COLS]) {
-
+    // Intermediate buffer for row-normalized values
+    data_t tmp[N_ROWS][N_COLS];
+    // On-chip buffers for A_DRAM and C_DRAM
+    data_t A[N_ROWS][N_COLS];
+    data_t C[N_ROWS][N_COLS];
 #pragma HLS interface m_axi port=A_DRAM offset=slave bundle=A
 #pragma HLS interface m_axi port=C_DRAM offset=slave bundle=C
 #pragma HLS interface s_axilite port=return
@@ -12,9 +16,7 @@ void top_kernel(data_t A_DRAM[N_ROWS][N_COLS],
 #pragma HLS ARRAY_PARTITION variable=A   cyclic factor=32 dim=2
 #pragma HLS ARRAY_PARTITION variable=C   cyclic factor=32 dim=1
 
-    // On-chip buffers for A_DRAM and C_DRAM
-    data_t A[N_ROWS][N_COLS];
-    data_t C[N_ROWS][N_COLS];
+
 
     for (int i = 0; i < N_ROWS; i++) {
         for (int j = 0; j < N_COLS; j++) {
@@ -24,8 +26,7 @@ void top_kernel(data_t A_DRAM[N_ROWS][N_COLS],
         }
     }
 
-    // Intermediate buffer for row-normalized values
-    data_t tmp[N_ROWS][N_COLS];
+
 
     // Phase 1: Row-wise normalization
     phase_1: for (int i = 0; i < N_ROWS; i++) {
