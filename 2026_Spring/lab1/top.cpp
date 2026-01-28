@@ -9,8 +9,8 @@ void top_kernel(data_t A_DRAM[N_ROWS][N_COLS],
     // On-chip buffers for A_DRAM and C_DRAM
     data_t A[N_ROWS][N_COLS];
     data_t C[N_ROWS][N_COLS];
-#pragma HLS interface m_axi port=A_DRAM offset=slave bundle=A
-#pragma HLS interface m_axi port=C_DRAM offset=slave bundle=C
+#pragma HLS interface m_axi port=A_DRAM offset=slave bundle=A max_widen_bitwidth=512
+#pragma HLS interface m_axi port=C_DRAM offset=slave bundle=C max_widen_bitwidth=512
 #pragma HLS interface s_axilite port=return
 #pragma HLS ARRAY_PARTITION variable=tmp cyclic factor=32 dim=1
 #pragma HLS ARRAY_PARTITION variable=A   cyclic factor=32 dim=2
