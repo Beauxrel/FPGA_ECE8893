@@ -6,6 +6,9 @@ void top_kernel(data_t A[N_ROWS][N_COLS],
                 data_t C[N_ROWS][N_COLS]) {
     // Intermediate buffer for row-normalized values
     static data_t tmp[N_ROWS][N_COLS];
+
+    data_t arr_1[N_ROWS][N_COLS] = A[N_ROWS][N_COLS];
+    data_t arr_2[N_ROWS][N_COLS] = B[N_ROWS][N_COLS];
 #pragma HLS ARRAY_PARTITION variable=tmp cyclic factor=32 dim=1
 #pragma HLS ARRAY_PARTITION variable=A   cyclic factor=32 dim=2
 #pragma HLS ARRAY_PARTITION variable=C   cyclic factor=32 dim=1
