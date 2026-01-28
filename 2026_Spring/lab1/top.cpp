@@ -4,15 +4,20 @@
 // Students will optimize this (loops, memory access, etc.).
 void top_kernel(data_t A[N_ROWS][N_COLS],
                 data_t C[N_ROWS][N_COLS]) {
-    // Intermediate buffer for row-normalized values
+    // On-chip BRAM staging buffers
+    static data_t A_bram[N_ROWS][N_COLS];
+    static data_t C_bram[N_ROWS][N_COLS];
+#pragma HLS BIND_STORAGE variable=A_bram type=ram_t2p impl=bram
+#pragma HLS BIND_STORAGE variable=C_bram type=ram_t2p impl=bram
+
+    // Intermediate buffer for row-normalized values (also on-chip)
     static data_t tmp[N_ROWS][N_COLS];
+#pragma HLS BIND_STORAGE variable=tmp type=ram_t2p impl=bram
 
-    data_t arr_1[N_ROWS][N_COLS] = A[N_ROWS][N_COLS];
-    data_t arr_2[N_ROWS][N_COLS] = C[N_ROWS][N_COLS];
-
-#pragma HLS ARRAY_PARTITION variable=tmp cyclic factor=32 dim=1
-#pragma HLS ARRAY_PARTITION variable=A   cyclic factor=32 dim=2
-#pragma HLS ARRAY_PARTITION variable=C   cyclic factor=32 dim=1
+    // (Optional) partitioning — keep/tune as desired
+#pragma HLS ARRAY_PARTITION variable=tmp    cyclic factor=32 dim=1
+#pragma HLS ARRAY_PARTITION variable=A_bram cyclic factor=32 dim=2
+#pragma HLS ARRAY_PARTITION variable=C_bram cyclic factor=32 dim=1
 
     // Phase 1: Row-wise normalization
     phase_1: for (int i = 0; i < N_ROWS; i++) {
@@ -22,7 +27,7 @@ void top_kernel(data_t A[N_ROWS][N_COLS],
         compute_row: for (int j = 0; j < N_COLS; j++) {
 #pragma HLS PIPELINE II=1
 #pragma HLS unroll factor=4
-            row_sum += A[i][j];
+            row_sum += A_bram[i][j];
         }
 
         // Avoid division by zero, add small bias
@@ -32,7 +37,7 @@ void top_kernel(data_t A[N_ROWS][N_COLS],
         norm_row: for (int j = 0; j < N_COLS; j++) {
 #pragma HLS PIPELINE II=1
 #pragma HLS unroll factor=4
-            tmp[i][j] = A[i][j] / denom;
+            tmp[i][j] = A_bram[i][j] / denom;
         }
     }
 
@@ -54,7 +59,7 @@ void top_kernel(data_t A[N_ROWS][N_COLS],
         for (int i = 0; i < N_ROWS; i++) {
 #pragma HLS PIPELINE II=1
 #pragma HLS unroll factor=4
-            C[i][j] = tmp[i][j] * scale;
+            C_bram[i][j] = tmp[i][j] * scale;
         }
     }
 }
