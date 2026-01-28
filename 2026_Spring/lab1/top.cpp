@@ -6,11 +6,9 @@ void top_kernel(data_t A[N_ROWS][N_COLS],
                 data_t C[N_ROWS][N_COLS]) {
     // Intermediate buffer for row-normalized values
     static data_t tmp[N_ROWS][N_COLS];
-
-    static data_t A_bram[N_ROWS][N_COLS] = A[N_ROWS][N_COLS];
-    static data_t C_bram[N_ROWS][N_COLS] = C[N_ROWS][N_COLS];
-#pragma HLS BIND_STORAGE variable=A_bram type=ram_2p impl=bram
-#pragma HLS BIND_STORAGE variable=C_bram type=ram_2p impl=bram
+#pragma HLS ARRAY_PARTITION variable=tmp cyclic factor=32 dim=1
+#pragma HLS ARRAY_PARTITION variable=A   cyclic factor=32 dim=2
+#pragma HLS ARRAY_PARTITION variable=C   cyclic factor=32 dim=1
 
     // Phase 1: Row-wise normalization
     phase_1: for (int i = 0; i < N_ROWS; i++) {
@@ -19,16 +17,19 @@ void top_kernel(data_t A[N_ROWS][N_COLS],
         // Compute row sum!
         compute_row: for (int j = 0; j < N_COLS; j++) {
 #pragma HLS PIPELINE II=1
+#pragma HLS unroll factor=4
             row_sum += A[i][j];
         }
 
         // Avoid division by zero, add small bias
         data_t denom = row_sum + (data_t)1.0;
+        data_t recip = (data_t)1.0 / denom;
 
         // Normalize each element in the row
         norm_row: for (int j = 0; j < N_COLS; j++) {
 #pragma HLS PIPELINE II=1
-            tmp[i][j] = A_bram[i][j] / denom;
+#pragma HLS unroll factor=4
+            tmp[i][j] = A[i][j] / denom;
         }
     }
 
@@ -39,6 +40,7 @@ void top_kernel(data_t A[N_ROWS][N_COLS],
         // Compute column sum of normalized values
         for (int i = 0; i < N_ROWS; i++) {
 #pragma HLS PIPELINE II=1
+#pragma HLS unroll factor=4
             col_sum += tmp[i][j];
         }
 
@@ -47,8 +49,10 @@ void top_kernel(data_t A[N_ROWS][N_COLS],
 
         // Apply scale to each element in the column
         for (int i = 0; i < N_ROWS; i++) {
+#pragma HLS BIND_OP variable=tmp op=mul impl=dsp
 #pragma HLS PIPELINE II=1
-            C_bram[i][j] = tmp[i][j] * scale;
+#pragma HLS unroll factor=4
+            C[i][j] = tmp[i][j] * scale;
         }
     }
 }
