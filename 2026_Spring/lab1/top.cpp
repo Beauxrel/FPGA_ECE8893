@@ -19,9 +19,9 @@ void top_kernel(data_t A_DRAM[N_ROWS][N_COLS],
 
 
     for (int i = 0; i < N_ROWS; i++) {
+#pragma HLS PIPELINE II=1
         for (int j = 0; j < N_COLS; j++) {
-            #pragma HLS PIPELINE II=1
-            #pragma HLS unroll factor=4
+#pragma HLS unroll factor=4
             A[i][j] = A_DRAM[i][j];
         }
     }
@@ -66,16 +66,15 @@ void top_kernel(data_t A_DRAM[N_ROWS][N_COLS],
 
         // Apply scale to each element in the column
         for (int i = 0; i < N_ROWS; i++) {
-#pragma HLS BIND_OP variable=tmp op=mul impl=dsp
 #pragma HLS PIPELINE II=1
 #pragma HLS unroll factor=4
             C[i][j] = tmp[i][j] * scale;
         }
     }
     for (int i = 0; i < N_ROWS; i++) {
+#pragma HLS PIPELINE II=1
         for (int j = 0; j < N_COLS; j++) {
-            #pragma HLS PIPELINE II=1
-            #pragma HLS unroll factor=4
+#pragma HLS unroll factor=4
             C_DRAM[i][j] = C[i][j];
         }
     }
