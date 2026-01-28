@@ -15,9 +15,9 @@ void top_kernel(data_t A[N_ROWS][N_COLS],
 #pragma HLS BIND_STORAGE variable=tmp type=ram_t2p impl=bram
 
     // (Optional) partitioning — keep/tune as desired
-#pragma HLS ARRAY_PARTITION variable=tmp    cyclic factor=32 dim=1
-#pragma HLS ARRAY_PARTITION variable=A_bram cyclic factor=32 dim=2
-#pragma HLS ARRAY_PARTITION variable=C_bram cyclic factor=32 dim=1
+#pragma HLS ARRAY_PARTITION variable=tmp    cyclic factor=8 dim=1
+#pragma HLS ARRAY_PARTITION variable=A_bram cyclic factor=8 dim=2
+#pragma HLS ARRAY_PARTITION variable=C_bram cyclic factor=8 dim=1
 
     // Phase 1: Row-wise normalization
     phase_1: for (int i = 0; i < N_ROWS; i++) {
