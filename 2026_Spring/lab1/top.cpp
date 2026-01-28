@@ -26,27 +26,84 @@ void top_kernel(data_t A[N_ROWS][N_COLS],
 #pragma HLS ARRAY_PARTITION variable=C_tile   cyclic factor=8 dim=2
 
     // ------------------------------------------------------------
-    // Tile loops
+    // Global column sums (BRAM)
     // ------------------------------------------------------------
-    tile_row: for (int ii = 0; ii < N_ROWS; ii += TILE_R) {
-        tile_col: for (int jj = 0; jj < N_COLS; jj += TILE_C) {
+    data_t col_sum_global[N_COLS];
+#pragma HLS ARRAY_PARTITION variable=col_sum_global cyclic factor=32 dim=1
 
-#pragma HLS PIPELINE off
+    // Initialize global column sums
+    init_global: for (int j = 0; j < N_COLS; j++) {
+#pragma HLS PIPELINE II=1
+        col_sum_global[j] = 0.0;
+    }
 
-            // ----------------------------------------------------
-            // Load tile: DRAM → BRAM
-            // ----------------------------------------------------
-            load_tile: for (int i = 0; i < TILE_R; i++) {
+    // ------------------------------------------------------------
+    // PASS 1: compute global column sums
+    // ------------------------------------------------------------
+    tile_row1: for (int ii = 0; ii < N_ROWS; ii += TILE_R) {
+        tile_col1: for (int jj = 0; jj < N_COLS; jj += TILE_C) {
+
+            // Load tile
+            load_tile1: for (int i = 0; i < TILE_R; i++) {
                 for (int j = 0; j < TILE_C; j++) {
 #pragma HLS PIPELINE II=1
                     A_tile[i][j] = A[ii + i][jj + j];
                 }
             }
 
-            // ----------------------------------------------------
-            // Phase 1: Row-wise normalization (tile-local)
-            // ----------------------------------------------------
-            norm_rows: for (int i = 0; i < TILE_R; i++) {
+            // Normalize rows and accumulate column sums
+            norm_and_accum: for (int i = 0; i < TILE_R; i++) {
+#pragma HLS PIPELINE off
+                data_t row_sum = 0.0;
+
+                // Row sum
+                for (int j = 0; j < TILE_C; j++) {
+#pragma HLS PIPELINE II=1
+#pragma HLS unroll factor=8
+                    row_sum += A_tile[i][j];
+                }
+
+                data_t recip = (data_t)1.0 / (row_sum + (data_t)1.0);
+
+                // Normalize + accumulate into global column sum
+                for (int j = 0; j < TILE_C; j++) {
+#pragma HLS PIPELINE II=1
+#pragma HLS unroll factor=8
+                    data_t tmp_val = A_tile[i][j] * recip;
+                    tmp_tile[i][j] = tmp_val;
+                    col_sum_global[jj + j] += tmp_val;
+                }
+            }
+        }
+    }
+
+    // ------------------------------------------------------------
+    // Compute global scale
+    // ------------------------------------------------------------
+    data_t scale_global[N_COLS];
+#pragma HLS ARRAY_PARTITION variable=scale_global cyclic factor=32 dim=1
+
+    compute_scale: for (int j = 0; j < N_COLS; j++) {
+#pragma HLS PIPELINE II=1
+        scale_global[j] = col_sum_global[j] / (data_t)N_ROWS;
+    }
+
+    // ------------------------------------------------------------
+    // PASS 2: compute output using global scale
+    // ------------------------------------------------------------
+    tile_row2: for (int ii = 0; ii < N_ROWS; ii += TILE_R) {
+        tile_col2: for (int jj = 0; jj < N_COLS; jj += TILE_C) {
+
+            // Load tile again
+            load_tile2: for (int i = 0; i < TILE_R; i++) {
+                for (int j = 0; j < TILE_C; j++) {
+#pragma HLS PIPELINE II=1
+                    A_tile[i][j] = A[ii + i][jj + j];
+                }
+            }
+
+            // Normalize rows and apply global scale
+            norm_and_scale: for (int i = 0; i < TILE_R; i++) {
 #pragma HLS PIPELINE off
                 data_t row_sum = 0.0;
 
@@ -61,51 +118,12 @@ void top_kernel(data_t A[N_ROWS][N_COLS],
                 for (int j = 0; j < TILE_C; j++) {
 #pragma HLS PIPELINE II=1
 #pragma HLS unroll factor=8
-                    tmp_tile[i][j] = A_tile[i][j] * recip;
+                    data_t tmp_val = A_tile[i][j] * recip;
+                    C_tile[i][j] = tmp_val * scale_global[jj + j];
                 }
             }
 
-            // ----------------------------------------------------
-            // Phase 2: Column-wise scaling (tile-local)
-            // ----------------------------------------------------
-            data_t col_sum[TILE_C];
-            data_t scale[TILE_C];
-#pragma HLS ARRAY_PARTITION variable=col_sum complete
-#pragma HLS ARRAY_PARTITION variable=scale   complete
-
-            // init
-            init_cols: for (int j = 0; j < TILE_C; j++) {
-#pragma HLS PIPELINE II=1
-                col_sum[j] = 0.0;
-            }
-
-            // accumulate
-            accum_cols: for (int i = 0; i < TILE_R; i++) {
-                for (int j = 0; j < TILE_C; j++) {
-#pragma HLS PIPELINE II=1
-#pragma HLS unroll factor=8
-                    col_sum[j] += tmp_tile[i][j];
-                }
-            }
-
-            // compute scale
-            scale_cols: for (int j = 0; j < TILE_C; j++) {
-#pragma HLS PIPELINE II=1
-                scale[j] = col_sum[j] / (data_t)TILE_R;
-            }
-
-            // apply scale
-            apply_scale: for (int i = 0; i < TILE_R; i++) {
-                for (int j = 0; j < TILE_C; j++) {
-#pragma HLS PIPELINE II=1
-#pragma HLS unroll factor=8
-                    C_tile[i][j] = tmp_tile[i][j] * scale[j];
-                }
-            }
-
-            // ----------------------------------------------------
-            // Store tile: BRAM → DRAM
-            // ----------------------------------------------------
+            // Store tile
             store_tile: for (int i = 0; i < TILE_R; i++) {
                 for (int j = 0; j < TILE_C; j++) {
 #pragma HLS PIPELINE II=1
