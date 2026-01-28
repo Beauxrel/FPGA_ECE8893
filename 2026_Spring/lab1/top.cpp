@@ -18,8 +18,8 @@ void top_kernel(data_t A_DRAM[N_ROWS][N_COLS],
 
 
     for (int i = 0; i < N_ROWS; i++) {
-#pragma HLS unroll factor=32
         for (int j = 0; j < N_COLS; j++) {
+#pragma HLS unroll factor=32
             A[i][j] = A_DRAM[i][j];
         }
     }
@@ -60,8 +60,8 @@ void top_kernel(data_t A_DRAM[N_ROWS][N_COLS],
         }
     }
     for (int i = 0; i < N_ROWS; i++) {
-#pragma HLS unroll factor=32
         for (int j = 0; j < N_COLS; j++) {
+#pragma HLS unroll factor=32
             C_DRAM[i][j] = C[i][j];
         }
     }
