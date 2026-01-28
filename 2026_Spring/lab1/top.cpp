@@ -35,7 +35,7 @@ void top_kernel(data_t A_DRAM[N_ROWS][N_COLS],
         // Compute row sum!
         compute_row: for (int j = 0; j < N_COLS; j++) {
 #pragma HLS PIPELINE II=1
-#pragma HLS unroll factor=4
+#pragma HLS unroll factor=8
             row_sum += A[i][j];
         }
 
@@ -45,7 +45,7 @@ void top_kernel(data_t A_DRAM[N_ROWS][N_COLS],
         // Normalize each element in the row
         norm_row: for (int j = 0; j < N_COLS; j++) {
 #pragma HLS PIPELINE II=1
-#pragma HLS unroll factor=4
+#pragma HLS unroll factor=8
             tmp[i][j] = A[i][j] / denom;
         }
     }
@@ -57,7 +57,7 @@ void top_kernel(data_t A_DRAM[N_ROWS][N_COLS],
         // Compute column sum of normalized values
         for (int i = 0; i < N_ROWS; i++) {
 #pragma HLS PIPELINE II=1
-#pragma HLS unroll factor=4
+#pragma HLS unroll factor=8
             col_sum += tmp[i][j];
         }
 
@@ -68,14 +68,14 @@ void top_kernel(data_t A_DRAM[N_ROWS][N_COLS],
         for (int i = 0; i < N_ROWS; i++) {
 #pragma HLS BIND_OP variable=tmp op=mul impl=dsp
 #pragma HLS PIPELINE II=1
-#pragma HLS unroll factor=4
+#pragma HLS unroll factor=8
             C[i][j] = tmp[i][j] * scale;
         }
     }
     for (int i = 0; i < N_ROWS; i++) {
         for (int j = 0; j < N_COLS; j++) {
             #pragma HLS PIPELINE II=1
-            #pragma HLS unroll factor=4
+            #pragma HLS unroll factor=8
             C_DRAM[i][j] = C[i][j];
         }
     }
