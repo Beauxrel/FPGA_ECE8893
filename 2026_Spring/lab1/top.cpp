@@ -31,7 +31,7 @@ void top_kernel(data_t A_DRAM[N_ROWS][N_COLS],
 
         // Compute row sum!
         compute_row: for (int j = 0; j < N_COLS; j++) {
-#pragma HLS unroll
+#pragma HLS unroll factor=4
             row_sum += A[i][j];
         }
 
@@ -40,7 +40,7 @@ void top_kernel(data_t A_DRAM[N_ROWS][N_COLS],
 
         // Normalize each element in the row
         norm_row: for (int j = 0; j < N_COLS; j++) {
-#pragma HLS unroll
+#pragma HLS unroll factor=4
             tmp[i][j] = A[i][j] / denom;
         }
     }
@@ -51,7 +51,7 @@ void top_kernel(data_t A_DRAM[N_ROWS][N_COLS],
 
         // Compute column sum of normalized values
         for (int i = 0; i < N_ROWS; i++) {
-#pragma HLS unroll
+#pragma HLS unroll factor=4
             col_sum += tmp[i][j];
         }
 
@@ -60,7 +60,7 @@ void top_kernel(data_t A_DRAM[N_ROWS][N_COLS],
 
         // Apply scale to each element in the column
         for (int i = 0; i < N_ROWS; i++) {
-#pragma HLS unroll
+#pragma HLS unroll factor=4
             C[i][j] = tmp[i][j] * scale;
         }
     }
