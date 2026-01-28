@@ -7,8 +7,8 @@ void top_kernel(data_t A[N_ROWS][N_COLS],
     // Intermediate buffer for row-normalized values
     static data_t tmp[N_ROWS][N_COLS];
 
-    static data_t A_bram[N_ROWS][N_COLS];
-    static data_t C_bram[N_ROWS][N_COLS];
+    static data_t A_bram[N_ROWS][N_COLS] = A[N_ROWS][N_COLS];
+    static data_t C_bram[N_ROWS][N_COLS] = C[N_ROWS][N_COLS];
 #pragma HLS BIND_STORAGE variable=A_bram type=ram_2p impl=bram
 #pragma HLS BIND_STORAGE variable=C_bram type=ram_2p impl=bram
 
