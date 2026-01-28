@@ -15,17 +15,16 @@ void top_kernel(data_t A_DRAM[N_ROWS][N_COLS],
 #pragma HLS ARRAY_PARTITION variable=tmp cyclic factor=32 dim=1
 #pragma HLS ARRAY_PARTITION variable=A   cyclic factor=32 dim=2
 #pragma HLS ARRAY_PARTITION variable=C   cyclic factor=32 dim=1
-
+#pragma HLS PIPELINE II=4
 
     for (int i = 0; i < N_ROWS; i++) {
         for (int j = 0; j < N_COLS; j++) {
-#pragma HLS unroll
             A[i][j] = A_DRAM[i][j];
         }
     }
 
 
-#pragma HLS PIPELINE II=1
+
     // Phase 1: Row-wise normalization
     phase_1: for (int i = 0; i < N_ROWS; i++) {
         data_t row_sum = 0.0;
@@ -67,7 +66,6 @@ void top_kernel(data_t A_DRAM[N_ROWS][N_COLS],
     }
     for (int i = 0; i < N_ROWS; i++) {
         for (int j = 0; j < N_COLS; j++) {
-#pragma HLS unroll
             C_DRAM[i][j] = C[i][j];
         }
     }
