@@ -54,18 +54,11 @@ void top_kernel(data_t A_DRAM[N_ROWS][N_COLS],
         // Compute average as scale
         data_t scale = col_sum / (data_t)N_ROWS;
 
-        // Apply scale to each element in the column
         for (int i = 0; i < N_ROWS; i++) {
+        //for (int j = 0; j < N_COLS; j++) {
 #pragma HLS PIPELINE II=1
 #pragma HLS unroll factor=4
-            C[i][j] = tmp[i][j] * scale;
+            C_DRAM[i][j] = tmp[i][j] * scale;
+        //}
         }
-    }
-    for (int i = 0; i < N_ROWS; i++) {
-        for (int j = 0; j < N_COLS; j++) {
-#pragma HLS PIPELINE II=1
-#pragma HLS unroll factor=4
-            C_DRAM[i][j] = C[i][j];
-        }
-    }
 }
