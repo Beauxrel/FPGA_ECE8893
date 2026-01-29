@@ -61,4 +61,5 @@ void top_kernel(data_t A_DRAM[N_ROWS][N_COLS],
             C_DRAM[i][j] = tmp[i][j] * scale;
         //}
         }
+    }
 }
