@@ -4,9 +4,9 @@ void top_kernel(data_t A_DRAM[N_ROWS][N_COLS],
                 data_t C_DRAM[N_ROWS][N_COLS])
 {
 #pragma HLS interface m_axi port = A_DRAM offset = slave bundle = A \
-    max_read_burst_length=256 num_read_outstanding=16 latency=64
+    max_read_burst_length=256 num_read_outstanding=16 latency=120
 #pragma HLS interface m_axi port = C_DRAM offset = slave bundle = C \
-    max_write_burst_length=256 num_write_outstanding=16 latency=64
+    max_write_burst_length=256 num_write_outstanding=16 latency=120
 #pragma HLS interface s_axilite port = return
 
     // On-chip buffers
@@ -16,7 +16,7 @@ void top_kernel(data_t A_DRAM[N_ROWS][N_COLS],
     
 #pragma HLS ARRAY_PARTITION variable = A cyclic factor = 32 dim = 2
 #pragma HLS ARRAY_PARTITION variable = C cyclic factor = 32 dim = 2
-#pragma HLS ARRAY_PARTITION variable = tmp cyclic factor = 64 dim = 2
+#pragma HLS ARRAY_PARTITION variable = tmp cyclic factor = 32 dim = 2
 
     // Load from DRAM
 dram_to_bram_outer:
@@ -26,7 +26,6 @@ dram_to_bram_inner:
         for (int j = 0; j < N_COLS; j++)
         {
 #pragma HLS PIPELINE II = 1
-#pragma HLS LOOP_FLATTEN
             A[i][j] = A_DRAM[i][j];
         }
     }
@@ -87,7 +86,6 @@ bram_to_dram_inner:
         for (int j = 0; j < N_COLS; j++)
         {
 #pragma HLS PIPELINE II = 1
-#pragma HLS LOOP_FLATTEN
             C_DRAM[i][j] = C[i][j];
         }
     }
