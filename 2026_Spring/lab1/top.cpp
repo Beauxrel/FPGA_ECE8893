@@ -17,9 +17,11 @@ void top_kernel(data_t A_DRAM[N_ROWS][N_COLS],
 #pragma HLS ARRAY_PARTITION variable = A cyclic factor = 32 dim = 2
 #pragma HLS ARRAY_PARTITION variable = C cyclic factor = 32 dim = 1
 
+dram_to_bram_outer:
     for (int i = 0; i < N_ROWS; i++)
     {
 #pragma HLS PIPELINE II = 1
+    dram_to_bram_inner:
         for (int j = 0; j < N_COLS; j++)
         {
             A[i][j] = A_DRAM[i][j];
@@ -30,11 +32,13 @@ void top_kernel(data_t A_DRAM[N_ROWS][N_COLS],
     data_t tmp[N_ROWS][N_COLS];
 #pragma HLS ARRAY_PARTITION variable = tmp cyclic factor = 32 dim = 1
     // Phase 1: Row-wise normalization
+row_norm:
     for (int i = 0; i < N_ROWS; i++)
     {
         data_t row_sum = 0.0;
 #pragma HLS PIPELINE II = 1
         // Compute row sum
+    compute_row:
         for (int j = 0; j < N_COLS; j++)
         {
             row_sum += A[i][j];
@@ -42,6 +46,7 @@ void top_kernel(data_t A_DRAM[N_ROWS][N_COLS],
 
         // Avoid division by zero, add small bias
         data_t denom = row_sum + (data_t)1.0;
+    div_loop:
         for (int j = 0; j < N_COLS; j++)
         {
             tmp[i][j] = A[i][j] / denom;
@@ -49,11 +54,13 @@ void top_kernel(data_t A_DRAM[N_ROWS][N_COLS],
     }
 
     // Phase 2: Column-wise scaling
+col_scaling:
     for (int j = 0; j < N_COLS; j++)
     {
         data_t col_sum = 0.0;
 #pragma HLS PIPELINE II = 1
         // Compute column sum of normalized values
+    col_sum:
         for (int i = 0; i < N_ROWS; i++)
         {
             col_sum += tmp[i][j];
@@ -63,15 +70,18 @@ void top_kernel(data_t A_DRAM[N_ROWS][N_COLS],
         data_t scale = col_sum / (data_t)N_ROWS;
 
         // Apply scale to each element in the column
+    col_scaling:
         for (int i = 0; i < N_ROWS; i++)
         {
             C[i][j] = tmp[i][j] * scale;
         }
     }
 
+bram_to_dram_outer:
     for (int i = 0; i < N_ROWS; i++)
     {
 #pragma HLS PIPELINE II = 1
+    bram_to_dram_inner:
         for (int j = 0; j < N_COLS; j++)
         {
             C_DRAM[i][j] = C[i][j];
