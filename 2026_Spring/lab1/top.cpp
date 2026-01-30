@@ -5,17 +5,13 @@
 void top_kernel(data_t A_DRAM[N_ROWS][N_COLS],
                 data_t C_DRAM[N_ROWS][N_COLS])
 {
-    // Intermediate buffer for row-normalized values
-    data_t tmp[N_ROWS][N_COLS];
+#pragma HLS interface m_axi port = A_DRAM offset = slave bundle = A
+#pragma HLS interface m_axi port = C_DRAM offset = slave bundle = C
+#pragma HLS interface s_axilite port = return
+
     // On-chip buffers for A_DRAM and C_DRAM
     data_t A[N_ROWS][N_COLS];
     data_t C[N_ROWS][N_COLS];
-#pragma HLS interface m_axi port = A_DRAM offset = slave bundle = A max_widen_bitwidth = 512
-#pragma HLS interface m_axi port = C_DRAM offset = slave bundle = C max_widen_bitwidth = 512
-#pragma HLS interface s_axilite port = return
-    // #pragma HLS ARRAY_PARTITION variable = tmp cyclic factor = 16 dim = 1
-    // #pragma HLS ARRAY_PARTITION variable = A cyclic factor = 16 dim = 2
-    // #pragma HLS ARRAY_PARTITION variable = C cyclic factor = 16 dim = 1
 
     for (int i = 0; i < N_ROWS; i++)
     {
@@ -24,21 +20,25 @@ void top_kernel(data_t A_DRAM[N_ROWS][N_COLS],
             A[i][j] = A_DRAM[i][j];
         }
     }
-// Phase 1: Row-wise normalization
-phase_1:
+
+    // Intermediate buffer for row-normalized values
+    data_t tmp[N_ROWS][N_COLS];
+
+    // Phase 1: Row-wise normalization
     for (int i = 0; i < N_ROWS; i++)
     {
         data_t row_sum = 0.0;
-    // Compute row sum!
-    compute_row:
+
+        // Compute row sum
         for (int j = 0; j < N_COLS; j++)
         {
-            // #pragma HLS PIPELINE II = 1
-            // #pragma HLS unroll factor = 4
             row_sum += A[i][j];
+
             // Avoid division by zero, add small bias
             data_t denom = row_sum + (data_t)0.015625;
-            tmp[i][j] = A_DRAM[i][j] / denom;
+
+            // Normalize each element in the row
+            tmp[i][j] = A[i][j] / denom;
         }
     }
 
