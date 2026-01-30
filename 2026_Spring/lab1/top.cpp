@@ -19,6 +19,7 @@ void top_kernel(data_t A_DRAM[N_ROWS][N_COLS],
 
     for (int i = 0; i < N_ROWS; i++)
     {
+#pragma HLS PIPELINE II = 1
         for (int j = 0; j < N_COLS; j++)
         {
             A[i][j] = A_DRAM[i][j];
@@ -32,12 +33,10 @@ void top_kernel(data_t A_DRAM[N_ROWS][N_COLS],
     for (int i = 0; i < N_ROWS; i++)
     {
         data_t row_sum = 0.0;
-
+#pragma HLS PIPELINE II = 1
         // Compute row sum
         for (int j = 0; j < N_COLS; j++)
         {
-#pragma HLS PIPELINE II = 1
-#pragma HLS unroll factor = N_COLS
             row_sum += A[i][j];
         }
 
@@ -45,8 +44,6 @@ void top_kernel(data_t A_DRAM[N_ROWS][N_COLS],
         data_t denom = row_sum + (data_t)1.0;
         for (int j = 0; j < N_COLS; j++)
         {
-#pragma HLS PIPELINE II = 1
-#pragma HLS unroll factor = N_COLS
             tmp[i][j] = A[i][j] / denom;
         }
     }
@@ -55,7 +52,7 @@ void top_kernel(data_t A_DRAM[N_ROWS][N_COLS],
     for (int j = 0; j < N_COLS; j++)
     {
         data_t col_sum = 0.0;
-
+#pragma HLS PIPELINE II = 1
         // Compute column sum of normalized values
         for (int i = 0; i < N_ROWS; i++)
         {
@@ -74,6 +71,7 @@ void top_kernel(data_t A_DRAM[N_ROWS][N_COLS],
 
     for (int i = 0; i < N_ROWS; i++)
     {
+#pragma HLS PIPELINE II = 1
         for (int j = 0; j < N_COLS; j++)
         {
             C_DRAM[i][j] = C[i][j];
