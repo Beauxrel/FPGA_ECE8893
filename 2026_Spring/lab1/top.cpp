@@ -15,16 +15,15 @@ void top_kernel(data_t A_DRAM[N_ROWS][N_COLS],
     data_t row_buf[N_COLS];
     data_t row_sum = 0;
 #pragma HLS ARRAY_PARTITION variable = A cyclic factor = 32 dim = 2
-#pragma HLS ARRAY_PARTITION variable = C cyclic factor = 32 dim = 1
+#pragma HLS ARRAY_PARTITION variable = C cyclic factor = 32 dim = 2
 
 dram_to_bram_outer:
     for (int i = 0; i < N_ROWS; i++)
     {
-#pragma HLS PIPELINE II = 1
-#pragma HLS LOOP_FLATTEN
     dram_to_bram_inner:
         for (int j = 0; j < N_COLS; j++)
         {
+#pragma HLS LOOP_FLATTEN
             A[i][j] = A_DRAM[i][j];
         }
     }
