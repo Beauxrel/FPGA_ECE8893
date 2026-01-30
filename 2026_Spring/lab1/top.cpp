@@ -32,7 +32,7 @@ dram_to_bram_outer:
     data_t tmp[N_ROWS][N_COLS];
 #pragma HLS ARRAY_PARTITION variable = tmp cyclic factor = 32 dim = 1
     // Phase 1: Row-wise normalization
-row_norm:
+phase_1:
     for (int i = 0; i < N_ROWS; i++)
     {
         data_t row_sum = 0.0;
@@ -54,7 +54,7 @@ row_norm:
     }
 
     // Phase 2: Column-wise scaling
-col_scaling:
+phase_2:
     for (int j = 0; j < N_COLS; j++)
     {
         data_t col_sum = 0.0;
