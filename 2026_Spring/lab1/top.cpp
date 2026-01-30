@@ -10,7 +10,7 @@ void top_kernel(data_t A_DRAM[N_ROWS][N_COLS],
     data_t A[N_ROWS][N_COLS];
     data_t C[N_ROWS][N_COLS];
     data_t rowbuf[N_COLS];
-#pragma HLS ARRAY_PARTITION variable=rowbuf cyclic factor=4 dim=1
+#pragma HLS ARRAY_PARTITION variable=rowbuf cyclic factor=32 dim=1
 #pragma HLS interface m_axi port=A_DRAM offset=slave bundle=A max_widen_bitwidth=512
 #pragma HLS interface m_axi port=C_DRAM offset=slave bundle=C max_widen_bitwidth=512
 #pragma HLS interface s_axilite port=return
