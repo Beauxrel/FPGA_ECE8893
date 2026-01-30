@@ -41,6 +41,7 @@ phase_1:
     compute_row:
         for (int j = 0; j < N_COLS; j++)
         {
+#pragma HLS UNROLL factor = 8
             row_sum += A[i][j];
         }
 
