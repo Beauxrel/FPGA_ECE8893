@@ -37,8 +37,8 @@ void top_kernel(data_t A_DRAM[N_ROWS][N_COLS],
         for (int j = 0; j < N_COLS; j++)
         {
 #pragma HLS PIPELINE II = 1
-            row_buf[j] = A[i][j];
-            row_sum += row_buf[j];
+#pragma HLS unroll factor = N_COLS
+            row_sum += A[i][j];
         }
 
         // Avoid division by zero, add small bias
@@ -46,7 +46,8 @@ void top_kernel(data_t A_DRAM[N_ROWS][N_COLS],
         for (int j = 0; j < N_COLS; j++)
         {
 #pragma HLS PIPELINE II = 1
-            tmp[i][j] = row_buf[j] / denom;
+#pragma HLS unroll factor = N_COLS
+            tmp[i][j] = A[i][j] / denom;
         }
     }
 
