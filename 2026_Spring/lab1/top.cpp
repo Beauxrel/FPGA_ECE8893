@@ -32,13 +32,17 @@ void top_kernel(data_t A_DRAM[N_ROWS][N_COLS],
         // Compute row sum
         for (int j = 0; j < N_COLS; j++)
         {
-            row_sum += A[i][j];
+#pragma HLS PIPELINE II = 1
+            row_buf[j] = A[i][j];
+            row_sum += row_buf[j];
+        }
 
-            // Avoid division by zero, add small bias
-            data_t denom = row_sum + (data_t)0.015625;
-
-            // Normalize each element in the row
-            tmp[i][j] = A[i][j] / denom;
+        // Avoid division by zero, add small bias
+        data_t denom = row_sum + (data_t)0.015625;
+        for (int j = 0; j < N_COLS; j++)
+        {
+#pragma HLS PIPELINE II = 1
+            tmp[i][j] = row_buf[j] / denom;
         }
     }
 
