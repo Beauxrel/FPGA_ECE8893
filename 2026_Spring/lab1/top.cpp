@@ -12,6 +12,11 @@ void top_kernel(data_t A_DRAM[N_ROWS][N_COLS],
     // On-chip buffers for A_DRAM and C_DRAM
     data_t A[N_ROWS][N_COLS];
     data_t C[N_ROWS][N_COLS];
+    data_t row_buf[N_COLS];
+    data_t row_sum = 0;
+#pragma HLS ARRAY_PARTITION variable = tmp cyclic factor = 32 dim = 1
+#pragma HLS ARRAY_PARTITION variable = A cyclic factor = 32 dim = 2
+#pragma HLS ARRAY_PARTITION variable = C cyclic factor = 32 dim = 1
 
     for (int i = 0; i < N_ROWS; i++)
     {
@@ -38,7 +43,7 @@ void top_kernel(data_t A_DRAM[N_ROWS][N_COLS],
         }
 
         // Avoid division by zero, add small bias
-        data_t denom = row_sum + (data_t)0.015625;
+        data_t denom = row_sum + (data_t)1.0;
         for (int j = 0; j < N_COLS; j++)
         {
 #pragma HLS PIPELINE II = 1
