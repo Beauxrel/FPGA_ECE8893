@@ -49,6 +49,7 @@ phase_1:
     div_loop:
         for (int j = 0; j < N_COLS; j++)
         {
+#pragma HLS UNROLL factor = 8
             tmp[i][j] = A[i][j] / denom;
         }
     }
@@ -63,7 +64,7 @@ phase_2:
     col_sum:
         for (int i = 0; i < N_ROWS; i++)
         {
-#pragma HLS UNROLL factor = 32
+#pragma HLS UNROLL factor = 8
             col_sum += tmp[i][j];
         }
 
@@ -74,7 +75,7 @@ phase_2:
     col_scaling:
         for (int i = 0; i < N_ROWS; i++)
         {
-#pragma HLS UNROLL factor = 32
+#pragma HLS UNROLL factor = 8
             C[i][j] = tmp[i][j] * scale;
         }
     }
@@ -83,7 +84,7 @@ phase_2:
     {
         for (int j = 0; j < N_COLS; j++)
         {
-#pragma HLS UNROLL factor = 32
+#pragma HLS UNROLL factor = 8
             C_DRAM[i][j] = C[i][j];
         }
     }
