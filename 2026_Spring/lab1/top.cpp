@@ -10,7 +10,6 @@ void top_kernel(data_t A_DRAM[N_ROWS][N_COLS],
     // On-chip buffers for A_DRAM and C_DRAM
     data_t A[N_ROWS][N_COLS];
     data_t C[N_ROWS][N_COLS];
-    data_t rowbuf[N_COLS];
 #pragma HLS ARRAY_PARTITION variable = rowbuf cyclic factor = 32 dim = 1
 #pragma HLS interface m_axi port = A_DRAM offset = slave bundle = A max_widen_bitwidth = 512
 #pragma HLS interface m_axi port = C_DRAM offset = slave bundle = C max_widen_bitwidth = 512
@@ -19,6 +18,13 @@ void top_kernel(data_t A_DRAM[N_ROWS][N_COLS],
 #pragma HLS ARRAY_PARTITION variable = A cyclic factor = 32 dim = 2
 #pragma HLS ARRAY_PARTITION variable = C cyclic factor = 32 dim = 1
 
+    for (int i = 0; i < N_ROWS; i++)
+    {
+        for (int j = 0; j < N_COLS; j++)
+        {
+            A[i][j] = A_DRAM[i][j];
+        }
+    }
 // Phase 1: Row-wise normalization
 phase_1:
     for (int i = 0; i < N_ROWS; i++)
@@ -30,7 +36,7 @@ phase_1:
         {
 #pragma HLS PIPELINE II = 1
 #pragma HLS unroll factor = 4
-            row_sum += A_DRAM[i][j];
+            row_sum += A[i][j];
             // Avoid division by zero, add small bias
             data_t denom = row_sum + (data_t)0.015625;
             tmp[i][j] = A_DRAM[i][j] / denom;
