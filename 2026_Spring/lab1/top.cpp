@@ -37,13 +37,14 @@ phase_1:
         // Compute row sum
     compute_row:
         for (int j = 0; j < N_COLS; j++){
-            row_sum += A[i][j];
+            row_sum[i] += A[i][j];
         }
     }
     // Avoid division by zero, add small bias
-    data_t denom = row_sum + (data_t)1.0;
+    
 phase_2:
     for (int i = 0; i < N_ROWS; i++){
+        data_t denom = row_sum[i] + (data_t)1.0;
     div_loop:
         for (int j = 0; j < N_COLS; j++)
         {
@@ -57,14 +58,15 @@ phase_3:
         // Compute column sum of normalized values
     col_sum:
         for (int i = 0; i < N_ROWS; i++){
-            col_sum += tmp[i][j];
+            col_sum[j] += tmp[i][j];
         }
     }
-    // Compute average as scale
-    data_t scale = col_sum / (data_t)N_ROWS;
+
 phase_4:
     for (int j = 0; j < N_COLS; j++){
     // Apply scale to each element in the column
+    // Compute average as scale
+    data_t scale = col_sum[j] / (data_t)N_ROWS;
     col_scaling:
         for (int i = 0; i < N_ROWS; i++){
             C[i][j] = tmp[i][j] * scale;
