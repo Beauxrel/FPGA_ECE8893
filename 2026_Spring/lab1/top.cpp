@@ -1,5 +1,4 @@
 #include "dcl.h"
-syn.interface.m_axi_conservative_mode false
 
 // Baseline implementation for HLS.
 // Students will optimize this (loops, memory access, etc.).
