@@ -1,65 +1,60 @@
 #include "dcl.h"
 
-// Baseline implementation for HLS.
-// Students will optimize this (loops, memory access, etc.).
 void top_kernel(data_t A_DRAM[N_ROWS][N_COLS],
                 data_t C_DRAM[N_ROWS][N_COLS]) {
 #pragma HLS interface m_axi port=A_DRAM offset=slave bundle=A
 #pragma HLS interface m_axi port=C_DRAM offset=slave bundle=C
 #pragma HLS interface s_axilite port=return
 
-    // On-chip buffers for A_DRAM and C_DRAM
     data_t A[N_ROWS][N_COLS];
+    data_t tmp[N_ROWS][N_COLS];
     data_t C[N_ROWS][N_COLS];
-    data_t row_sum = 0.0;
-    data_t col_sum = 0.0;
 
+    data_t row_sum_arr[N_ROWS];
+    data_t col_sum_arr[N_COLS];
+
+    // Load A
     for (int i = 0; i < N_ROWS; i++) {
         for (int j = 0; j < N_COLS; j++) {
             A[i][j] = A_DRAM[i][j];
         }
     }
 
-    // Intermediate buffer for row-normalized values
-    data_t tmp[N_ROWS][N_COLS];
-
-    // Phase 1: Row-wise normalization
+    // Phase 1a: row sums (store each row's sum)
     for (int i = 0; i < N_ROWS; i++) {
-        row_sum = 0.0;
-        // Compute row sum
+        data_t row_sum = 0.0;
         for (int j = 0; j < N_COLS; j++) {
             row_sum += A[i][j];
         }
+        row_sum_arr[i] = row_sum;
     }
-    for (int i = 0; i < N_ROWS; i++) {
-        // Avoid division by zero, add small bias
-        data_t denom = row_sum + (data_t)1.0;
 
-        // Normalize each element in the row
+    // Phase 1b: row normalize using per-row denom
+    for (int i = 0; i < N_ROWS; i++) {
+        data_t denom = row_sum_arr[i] + (data_t)1.0;
         for (int j = 0; j < N_COLS; j++) {
             tmp[i][j] = A[i][j] / denom;
         }
     }
 
-    // Phase 2: Column-wise scaling
+    // Phase 2a: column sums (store each column's sum)
     for (int j = 0; j < N_COLS; j++) {
-        col_sum = 0.0;
-
-        // Compute column sum of normalized values
+        data_t col_sum = 0.0;
         for (int i = 0; i < N_ROWS; i++) {
             col_sum += tmp[i][j];
         }
+        col_sum_arr[j] = col_sum;
     }
-    for (int j = 0; j < N_COLS; j++) {
-        // Compute average as scale
-        data_t scale = col_sum / (data_t)N_ROWS;
 
-        // Apply scale to each element in the column
+    // Phase 2b: scale using per-column scale
+    for (int j = 0; j < N_COLS; j++) {
+        data_t scale = col_sum_arr[j] / (data_t)N_ROWS;
         for (int i = 0; i < N_ROWS; i++) {
             C[i][j] = tmp[i][j] * scale;
         }
     }
-    
+
+    // Store C
     for (int i = 0; i < N_ROWS; i++) {
         for (int j = 0; j < N_COLS; j++) {
             C_DRAM[i][j] = C[i][j];
