@@ -33,7 +33,6 @@ dram_to_bram_outer:
     // Phase 1: Row-wise normalization
 phase_1:
     for (int i = 0; i < N_ROWS; i++){
-        row_sum = 0.0;
         // Compute row sum
     compute_row:
         for (int j = 0; j < N_COLS; j++){
@@ -54,7 +53,6 @@ phase_2:
 phase_3:
     // Phase 2: Column-wise scaling
     for (int j = 0; j < N_COLS; j++){
-        col_sum = 0.0;
         // Compute column sum of normalized values
     col_sum:
         for (int i = 0; i < N_ROWS; i++){
