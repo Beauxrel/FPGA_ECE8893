@@ -22,6 +22,7 @@ dram_to_bram_outer:
     dram_to_bram_inner:
         for (int j = 0; j < N_COLS; j++)
         {
+#pragma HLS PIPELINE II=1
             A[i][j] = A_DRAM[i][j];
         }
     }
@@ -33,8 +34,7 @@ dram_to_bram_outer:
 phase_1:
     for (int i = 0; i < N_ROWS; i++)
     {
-#pragma HLS PIPELINE II = 1
-#pragma HLS UNROLL factor = 4
+#pragma HLS UNROLL factor = 2
         data_t row_sum = 0.0;
         // Compute row sum
     compute_row:
@@ -58,8 +58,7 @@ phase_1:
 phase_2:
     for (int j = 0; j < N_COLS; j++)
     {
-#pragma HLS PIPELINE II = 1
-#pragma HLS UNROLL factor = 4
+#pragma HLS UNROLL factor = 2
         data_t col_sum = 0.0;
         // Compute column sum of normalized values
     col_sum:
