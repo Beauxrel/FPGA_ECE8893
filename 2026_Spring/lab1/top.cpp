@@ -1,12 +1,13 @@
 #include "dcl.h"
+syn.interface.m_axi_conservative_mode false
 
 // Baseline implementation for HLS.
 // Students will optimize this (loops, memory access, etc.).
 void top_kernel(data_t A_DRAM[N_ROWS][N_COLS],
                 data_t C_DRAM[N_ROWS][N_COLS])
 {
-#pragma HLS interface m_axi port = A_DRAM offset = direct bundle = A
-#pragma HLS interface m_axi port = C_DRAM offset = direct bundle = C
+#pragma HLS interface m_axi port = A_DRAM offset = direct bundle = A max_widen_bitwidth=512
+#pragma HLS interface m_axi port = C_DRAM offset = direct bundle = C max_widen_bitwidth=512
 #pragma HLS interface s_axilite port = return
 
     // On-chip buffers for A_DRAM and C_DRAM
