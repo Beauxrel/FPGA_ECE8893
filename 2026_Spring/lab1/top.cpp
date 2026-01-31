@@ -1,68 +1,82 @@
 #include "dcl.h"
 
+// Baseline implementation for HLS.
+// Students will optimize this (loops, memory access, etc.).
 void top_kernel(data_t A_DRAM[N_ROWS][N_COLS],
-                data_t C_DRAM[N_ROWS][N_COLS]) {
-#pragma HLS interface m_axi port=A_DRAM offset=slave bundle=A
-#pragma HLS interface m_axi port=C_DRAM offset=slave bundle=C
-#pragma HLS interface s_axilite port=return
+                data_t C_DRAM[N_ROWS][N_COLS])
+{
+#pragma HLS interface mode=m_axi port = A_DRAM offset = slave bundle = A 
+#pragma HLS interface mode=m_axi port = C_DRAM offset = slave bundle = C
+#pragma HLS interface s_axilite port = return
 
+    // On-chip buffers for A_DRAM and C_DRAM
     data_t A[N_ROWS][N_COLS];
-    data_t tmp[N_ROWS][N_COLS];
     data_t C[N_ROWS][N_COLS];
+    data_t row_sum = 0.0;
+    data_t col_sum = 0.0;
 
-    data_t row_sum_arr[N_ROWS];
-    data_t col_sum_arr[N_COLS];
+#pragma HLS ARRAY_PARTITION variable = A cyclic factor = 32 dim = 1
+#pragma HLS ARRAY_PARTITION variable = C cyclic factor = 32 dim = 2
 
-    // Load A
-    for (int i = 0; i < N_ROWS; i++) {
-        for (int j = 0; j < N_COLS; j++) {
+dram_to_bram_outer:
+    for (int i = 0; i < N_ROWS; i++){
+    dram_to_bram_inner:
+        for (int j = 0; j < N_COLS; j++){
 #pragma HLS PIPELINE II=1
             A[i][j] = A_DRAM[i][j];
         }
     }
 
-    // Phase 1a: row sums (store each row's sum)
-    for (int i = 0; i < N_ROWS; i++) {
-        data_t row_sum = 0.0;
-        for (int j = 0; j < N_COLS; j++) {
-#pragma HLS PIPELINE II=1
+    // Intermediate buffer for row-normalized values
+    data_t tmp[N_ROWS][N_COLS];
+#pragma HLS ARRAY_PARTITION variable = tmp cyclic factor = 8 dim = 2
+    // Phase 1: Row-wise normalization
+phase_1:
+    for (int i = 0; i < N_ROWS; i++){
+        row_sum = 0.0;
+        // Compute row sum
+    compute_row:
+        for (int j = 0; j < N_COLS; j++){
             row_sum += A[i][j];
         }
-        row_sum_arr[i] = row_sum;
     }
-
-    // Phase 1b: row normalize using per-row denom
-    for (int i = 0; i < N_ROWS; i++) {
-        data_t denom = row_sum_arr[i] + (data_t)1.0;
-        for (int j = 0; j < N_COLS; j++) {
-#pragma HLS PIPELINE II=1
+    // Avoid division by zero, add small bias
+    data_t denom = row_sum + (data_t)1.0;
+phase_2:
+    for (int i = 0; i < N_ROWS; i++){
+    div_loop:
+        for (int j = 0; j < N_COLS; j++)
+        {
             tmp[i][j] = A[i][j] / denom;
         }
     }
-
-    // Phase 2a: column sums (store each column's sum)
-    for (int j = 0; j < N_COLS; j++) {
-        data_t col_sum = 0.0;
-        for (int i = 0; i < N_ROWS; i++) {
-#pragma HLS PIPELINE II=1
+phase_3:
+    // Phase 2: Column-wise scaling
+    for (int j = 0; j < N_COLS; j++){
+        col_sum = 0.0;
+        // Compute column sum of normalized values
+    col_sum:
+        for (int i = 0; i < N_ROWS; i++){
             col_sum += tmp[i][j];
         }
-        col_sum_arr[j] = col_sum;
     }
-
-    // Phase 2b: scale using per-column scale
-    for (int j = 0; j < N_COLS; j++) {
-        data_t scale = col_sum_arr[j] / (data_t)N_ROWS;
-        for (int i = 0; i < N_ROWS; i++) {
-#pragma HLS PIPELINE II=1
+    // Compute average as scale
+    data_t scale = col_sum / (data_t)N_ROWS;
+phase_4:
+    for (int j = 0; j < N_COLS; j++){
+    // Apply scale to each element in the column
+    col_scaling:
+        for (int i = 0; i < N_ROWS; i++){
             C[i][j] = tmp[i][j] * scale;
         }
     }
 
-    // Store C
-    for (int i = 0; i < N_ROWS; i++) {
-        for (int j = 0; j < N_COLS; j++) {
-#pragma HLS PIPELINE II=1
+bram_to_dram_outer:
+    for (int i = 0; i < N_ROWS; i++)
+    {
+    bram_to_dram_inner:
+        for (int j = 0; j < N_COLS; j++)
+        {
             C_DRAM[i][j] = C[i][j];
         }
     }
