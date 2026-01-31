@@ -14,7 +14,9 @@ void top_kernel(data_t A_DRAM[N_ROWS][N_COLS],
     data_t C[N_ROWS][N_COLS];
     data_t row_sum[N_ROWS];
     data_t col_sum[N_COLS];
-
+    // Intermediate buffer for row-normalized values
+    data_t tmp[N_ROWS][N_COLS];
+#pragma HLS ARRAY_PARTITION variable = tmp cyclic factor = 8 dim = 2
 #pragma HLS ARRAY_PARTITION variable = A cyclic factor = 32 dim = 1
 #pragma HLS ARRAY_PARTITION variable = C cyclic factor = 32 dim = 2
 
@@ -27,13 +29,11 @@ dram_to_bram_outer:
         }
     }
 
-    // Intermediate buffer for row-normalized values
-    data_t tmp[N_ROWS][N_COLS];
-#pragma HLS ARRAY_PARTITION variable = tmp cyclic factor = 8 dim = 2
     // Phase 1: Row-wise normalization
 phase_1:
     for (int i = 0; i < N_ROWS; i++){
         // Compute row sum
+        row_sum[i] = 0; 
     compute_row:
         for (int j = 0; j < N_COLS; j++){
             row_sum[i] += A[i][j];
@@ -53,6 +53,7 @@ phase_2:
 phase_3:
     // Phase 2: Column-wise scaling
     for (int j = 0; j < N_COLS; j++){
+        col_sum[j] = 0;
         // Compute column sum of normalized values
     col_sum:
         for (int i = 0; i < N_ROWS; i++){
