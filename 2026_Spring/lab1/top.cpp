@@ -13,8 +13,8 @@ void top_kernel(data_t A_DRAM[N_ROWS][N_COLS],
     data_t A[N_ROWS][N_COLS];
     data_t C[N_ROWS][N_COLS];
 
-#pragma HLS ARRAY_PARTITION variable = A cyclic factor = 8 dim = 1
-#pragma HLS ARRAY_PARTITION variable = C cyclic factor = 8 dim = 2
+#pragma HLS ARRAY_PARTITION variable = A cyclic factor = 32 dim = 1
+#pragma HLS ARRAY_PARTITION variable = C cyclic factor = 32 dim = 2
 
 dram_to_bram_outer:
     for (int i = 0; i < N_ROWS; i++)
@@ -34,7 +34,7 @@ dram_to_bram_outer:
 phase_1:
     for (int i = 0; i < N_ROWS; i++)
     {
-#pragma HLS UNROLL factor = 2
+#pragma HLS UNROLL factor = 4
         data_t row_sum = 0.0;
         // Compute row sum
     compute_row:
@@ -58,7 +58,7 @@ phase_1:
 phase_2:
     for (int j = 0; j < N_COLS; j++)
     {
-#pragma HLS UNROLL factor = 2
+#pragma HLS UNROLL factor = 4
         data_t col_sum = 0.0;
         // Compute column sum of normalized values
     col_sum:
