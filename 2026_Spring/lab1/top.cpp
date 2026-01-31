@@ -35,12 +35,11 @@ phase_1:
     for (int i = 0; i < N_ROWS; i++)
     {
         data_t row_sum = 0.0;
-#pragma HLS PIPELINE II = 1
         // Compute row sum
     compute_row:
         for (int j = 0; j < N_COLS; j++)
         {
-#pragma HLS UNROLL factor = 8
+#pragma HLS PIPELINE II = 1
             row_sum += A[i][j];
         }
 
@@ -49,7 +48,7 @@ phase_1:
     div_loop:
         for (int j = 0; j < N_COLS; j++)
         {
-#pragma HLS UNROLL factor = 8
+#pragma HLS PIPELINE II = 1
             tmp[i][j] = A[i][j] / denom;
         }
     }
@@ -59,12 +58,11 @@ phase_2:
     for (int j = 0; j < N_COLS; j++)
     {
         data_t col_sum = 0.0;
-#pragma HLS PIPELINE II = 1
         // Compute column sum of normalized values
     col_sum:
         for (int i = 0; i < N_ROWS; i++)
         {
-#pragma HLS UNROLL factor = 8
+#pragma HLS PIPELINE II = 1
             col_sum += tmp[i][j];
         }
 
@@ -75,7 +73,7 @@ phase_2:
     col_scaling:
         for (int i = 0; i < N_ROWS; i++)
         {
-#pragma HLS UNROLL factor = 8
+#pragma HLS PIPELINE II = 1
             C[i][j] = tmp[i][j] * scale;
         }
     }
@@ -84,7 +82,7 @@ phase_2:
     {
         for (int j = 0; j < N_COLS; j++)
         {
-#pragma HLS UNROLL factor = 8
+#pragma HLS PIPELINE II = 1
             C_DRAM[i][j] = C[i][j];
         }
     }
