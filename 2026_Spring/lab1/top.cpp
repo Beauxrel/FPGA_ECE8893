@@ -35,6 +35,7 @@ phase_1:
     for (int i = 0; i < N_ROWS; i++)
     {
 #pragma HLS PIPELINE II = 1
+#pragma HLS UNROLL factor = 4
         data_t row_sum = 0.0;
         // Compute row sum
     compute_row:
@@ -59,6 +60,7 @@ phase_2:
     for (int j = 0; j < N_COLS; j++)
     {
 #pragma HLS PIPELINE II = 1
+#pragma HLS UNROLL factor = 4
         data_t col_sum = 0.0;
         // Compute column sum of normalized values
     col_sum:
