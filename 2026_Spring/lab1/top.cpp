@@ -12,8 +12,8 @@ void top_kernel(data_t A_DRAM[N_ROWS][N_COLS],
     // On-chip buffers for A_DRAM and C_DRAM
     data_t A[N_ROWS][N_COLS];
     data_t C[N_ROWS][N_COLS];
-    data_t row_sum = 0.0;
-    data_t col_sum = 0.0;
+    data_t row_sum[N_ROWS];
+    data_t col_sum[N_COLS];
 
 #pragma HLS ARRAY_PARTITION variable = A cyclic factor = 32 dim = 1
 #pragma HLS ARRAY_PARTITION variable = C cyclic factor = 32 dim = 2
