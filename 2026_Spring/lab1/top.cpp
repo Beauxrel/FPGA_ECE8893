@@ -28,8 +28,7 @@ dram_to_bram_outer:
 
     // Intermediate buffer for row-normalized values
     data_t tmp[N_ROWS][N_COLS];
-#pragma HLS bind_storage variable = tmp type = ram_2p impl = bram
-#pragma HLS ARRAY_PARTITION variable = tmp cyclic factor = 32 dim = 2
+#pragma HLS ARRAY_PARTITION variable = tmp cyclic factor = 64 dim = 2
     // Phase 1: Row-wise normalization
 phase_1:
     for (int i = 0; i < N_ROWS; i++)
