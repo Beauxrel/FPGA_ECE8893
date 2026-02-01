@@ -115,6 +115,7 @@ phase_4:
 #pragma HLS PIPELINE II = 6
         for (int j = 0; j < N_COLS; j++)
         {
+#pragma HLS UNROLL factor = 4
             C[i][j] = tmp[i][j] * scale[j];
         }
     }
