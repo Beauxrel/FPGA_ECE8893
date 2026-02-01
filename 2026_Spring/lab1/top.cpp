@@ -81,7 +81,7 @@ phase_3:
 compute_scale:
     for (int j = 0; j < N_COLS; j++) {
 #pragma HLS PIPELINE II=1
-        scale[j] = col_sum_buf[j] / (data_t)N_ROWS;
+        scale[j] = col_sum[j] / (data_t)N_ROWS;
     }
 phase_4:
     for (int i = 0; i < N_ROWS; i++){
