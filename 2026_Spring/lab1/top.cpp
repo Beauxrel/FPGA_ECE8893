@@ -19,15 +19,13 @@ void top_kernel(data_t A_DRAM[N_ROWS][N_COLS],
 #pragma HLS ARRAY_PARTITION variable = tmp cyclic factor = 8 dim = 1
 #pragma HLS ARRAY_PARTITION variable = A cyclic factor = 8 dim = 2
 #pragma HLS ARRAY_PARTITION variable = C cyclic factor = 8 dim = 2
-#pragma HLS ARRAY_PARTITION variable = A cyclic factor = 8 dim = 1
-#pragma HLS ARRAY_PARTITION variable = C cyclic factor = 8 dim = 1
 
 dram_to_bram_outer:
     for (int i = 0; i < N_ROWS; i++){
     dram_to_bram_inner:
         for (int j = 0; j < N_COLS; j++){
 #pragma HLS PIPELINE II=1
-#pragma HLS unroll factor=4
+#pragma HLS unroll factor=8
             A[i][j] = A_DRAM[i][j];
         }
     }
@@ -40,7 +38,7 @@ phase_1:
     compute_row:
         for (int j = 0; j < N_COLS; j++){
 #pragma HLS PIPELINE II=1
-#pragma HLS unroll factor=4
+#pragma HLS unroll factor=8
             row_sum[i] += A[i][j];
         }
     }
@@ -53,7 +51,7 @@ phase_2:
         for (int j = 0; j < N_COLS; j++)
         {
 #pragma HLS PIPELINE II=1
-#pragma HLS unroll factor=4
+#pragma HLS unroll factor=8
             tmp[i][j] = A[i][j] / denom;
         }
     }
@@ -65,7 +63,7 @@ phase_3:
     col_sum:
         for (int i = 0; i < N_ROWS; i++){
 #pragma HLS PIPELINE II=1
-#pragma HLS unroll factor=4
+#pragma HLS unroll factor=8
             col_sum[j] += tmp[i][j];
         }
     }
@@ -78,7 +76,7 @@ phase_4:
     col_scaling:
         for (int i = 0; i < N_ROWS; i++){
 #pragma HLS PIPELINE II=1
-#pragma HLS unroll factor=4
+#pragma HLS unroll factor=8
             C[i][j] = tmp[i][j] * scale;
         }
     }
@@ -90,7 +88,7 @@ bram_to_dram_outer:
         for (int j = 0; j < N_COLS; j++)
         {
 #pragma HLS PIPELINE II=1
-#pragma HLS unroll factor=4
+#pragma HLS unroll factor=8
             C_DRAM[i][j] = C[i][j];
         }
     }
