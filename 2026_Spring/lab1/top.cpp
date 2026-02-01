@@ -17,6 +17,7 @@ void top_kernel(data_t A_DRAM[N_ROWS][N_COLS],
     data_t C[N_ROWS][N_COLS];
     data_t row_sum[N_ROWS];
     data_t col_sum[N_COLS];
+    data_t scale[N_COLS];
     // Intermediate buffer for row-normalized values
     data_t tmp[N_ROWS][N_COLS];
 #pragma HLS ARRAY_PARTITION variable = tmp cyclic factor = 32 dim = 2
@@ -82,7 +83,6 @@ compute_scale:
 #pragma HLS PIPELINE II=1
         scale[j] = col_sum_buf[j] / (data_t)N_ROWS;
     }
-
 phase_4:
     for (int i = 0; i < N_ROWS; i++){
 #pragma HLS PIPELINE II=1
@@ -92,7 +92,6 @@ phase_4:
             C[i][j] = tmp[i][j] * scale;
         }
     }
-
 bram_to_dram_outer:
     for (int i = 0; i < N_ROWS; i++)
     {
