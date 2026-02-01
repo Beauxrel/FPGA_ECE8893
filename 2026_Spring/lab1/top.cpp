@@ -31,7 +31,7 @@ dram_to_bram_outer:
             A[i][j] = A_DRAM[i][j];
         }
     }
-col_init:
+row_init:
 // init col_sum
     for (int i = 0; i < N_COLS; i++){
 #pragma HLS PIPELINE II=1
