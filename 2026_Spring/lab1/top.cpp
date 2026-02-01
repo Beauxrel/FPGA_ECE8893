@@ -16,15 +16,18 @@ void top_kernel(data_t A_DRAM[N_ROWS][N_COLS],
     data_t col_sum[N_COLS];
     // Intermediate buffer for row-normalized values
     data_t tmp[N_ROWS][N_COLS];
-#pragma HLS ARRAY_PARTITION variable = tmp cyclic factor = 32 dim = 1
-#pragma HLS ARRAY_PARTITION variable = A cyclic factor = 32 dim = 2
-#pragma HLS ARRAY_PARTITION variable = C cyclic factor = 32 dim = 1
+#pragma HLS ARRAY_PARTITION variable = tmp cyclic factor = 8 dim = 1
+#pragma HLS ARRAY_PARTITION variable = A cyclic factor = 8 dim = 2
+#pragma HLS ARRAY_PARTITION variable = C cyclic factor = 8 dim = 2
+#pragma HLS ARRAY_PARTITION variable = A cyclic factor = 8 dim = 1
+#pragma HLS ARRAY_PARTITION variable = C cyclic factor = 8 dim = 1
 
 dram_to_bram_outer:
     for (int i = 0; i < N_ROWS; i++){
     dram_to_bram_inner:
         for (int j = 0; j < N_COLS; j++){
 #pragma HLS PIPELINE II=1
+#pragma HLS unroll factor=4
             A[i][j] = A_DRAM[i][j];
         }
     }
@@ -87,6 +90,7 @@ bram_to_dram_outer:
         for (int j = 0; j < N_COLS; j++)
         {
 #pragma HLS PIPELINE II=1
+#pragma HLS unroll factor=4
             C_DRAM[i][j] = C[i][j];
         }
     }
