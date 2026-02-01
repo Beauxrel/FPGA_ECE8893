@@ -112,7 +112,7 @@ compute_scale:
 phase_4:
     for (int i = 0; i < N_ROWS; i++)
     {
-#pragma HLS PIPELINE II = 5
+#pragma HLS PIPELINE II = 6
         for (int j = 0; j < N_COLS; j++)
         {
             C[i][j] = tmp[i][j] * scale[j];
