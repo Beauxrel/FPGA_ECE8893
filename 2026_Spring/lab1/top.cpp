@@ -47,11 +47,10 @@ phase_1:
     for (int i = 0; i < N_ROWS; i++)
     {
         data_t acc = 0;
-#pragma HLS PIPELINE II = 5
-#pragma HLS unroll factor = 8
     compute_row:
         for (int j = 0; j < N_COLS; j++)
         {
+#pragma HLS PIPELINE II = 8
             acc += A[i][j];
         }
         row_sum[i] = acc;
@@ -64,11 +63,10 @@ phase_2:
     for (int i = 0; i < N_ROWS; i++)
     {
         data_t denom = row_sum[i] + (data_t)1.0;
-#pragma HLS PIPELINE II = 8
-#pragma HLS unroll factor = 2
     div_loop:
         for (int j = 0; j < N_COLS; j++)
         {
+#pragma HLS PIPELINE II = 8
             tmp[i][j] = A[i][j] / denom;
         }
     }
@@ -87,10 +85,9 @@ init_col_sum:
 phase_3:
     for (int i = 0; i < N_ROWS; i++)
     {
-#pragma HLS PIPELINE II = 3
-#pragma HLS unroll factor = 8
         for (int j = 0; j < N_COLS; j++)
         {
+#pragma HLS PIPELINE II = 3
             col_sum_buf[j] += tmp[i][j];
         }
     }
@@ -113,10 +110,9 @@ compute_scale:
 phase_4:
     for (int i = 0; i < N_ROWS; i++)
     {
-#pragma HLS PIPELINE II = 7
-#pragma HLS unroll factor = 8
         for (int j = 0; j < N_COLS; j++)
         {
+#pragma HLS PIPELINE II = 5
             C[i][j] = tmp[i][j] * scale[j];
         }
     }
