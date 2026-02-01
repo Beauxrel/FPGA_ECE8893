@@ -50,7 +50,7 @@ phase_1:
     compute_row:
         for (int j = 0; j < N_COLS; j++)
         {
-#pragma HLS PIPELINE II = 8
+#pragma HLS PIPELINE II = 1
             acc += A[i][j];
         }
         row_sum[i] = acc;
@@ -66,7 +66,7 @@ phase_2:
     div_loop:
         for (int j = 0; j < N_COLS; j++)
         {
-#pragma HLS PIPELINE II = 8
+#pragma HLS PIPELINE II = 1
             tmp[i][j] = A[i][j] / denom;
         }
     }
@@ -87,7 +87,7 @@ phase_3:
     {
         for (int j = 0; j < N_COLS; j++)
         {
-#pragma HLS PIPELINE II = 3
+#pragma HLS PIPELINE II = 1
             col_sum_buf[j] += tmp[i][j];
         }
     }
