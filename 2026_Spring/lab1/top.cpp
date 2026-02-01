@@ -35,7 +35,7 @@ dram_to_bram_outer:
     dram_to_bram_inner:
         for (int j = 0; j < N_COLS; j++)
         {
-#pragma HLS unroll factor = 32
+#pragma HLS PIPELINE II = 1
             A[i][j] = A_DRAM[i][j];
         }
     }
@@ -130,7 +130,7 @@ bram_to_dram_outer:
     bram_to_dram_inner:
         for (int j = 0; j < N_COLS; j++)
         {
-#pragma HLS unroll factor = 32
+#pragma HLS PIPELINE II = 1
             C_DRAM[i][j] = C[i][j];
         }
     }
