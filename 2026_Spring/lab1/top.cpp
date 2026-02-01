@@ -90,7 +90,7 @@ phase_3:
 #pragma HLS PIPELINE II = 3
         for (int j = 0; j < N_COLS; j++)
         {
-#pragma HLS UNROLL factor = 4
+#pragma HLS UNROLL factor = 2
             col_sum_buf[j] += tmp[i][j];
         }
     }
@@ -112,7 +112,7 @@ compute_scale:
 phase_4:
     for (int i = 0; i < N_ROWS; i++)
     {
-#pragma HLS PIPELINE II = 6
+#pragma HLS PIPELINE II = 7
         for (int j = 0; j < N_COLS; j++)
         {
 #pragma HLS UNROLL factor = 2
