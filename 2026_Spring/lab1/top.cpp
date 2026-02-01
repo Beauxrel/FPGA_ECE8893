@@ -43,10 +43,10 @@ dram_to_bram_outer:
     // ---------------------------------------------------------------------
 phase_1:
     for (int i = 0; i < N_ROWS; i++) {
-#pragma HLS PIPELINE II=1
         data_t acc = 0;
     compute_row:
         for (int j = 0; j < N_COLS; j++) {
+#pragma HLS PIPELINE II=1
 #pragma HLS UNROLL factor=4
             acc += A[i][j];
         }
@@ -58,10 +58,10 @@ phase_1:
     // ---------------------------------------------------------------------
 phase_2:
     for (int i = 0; i < N_ROWS; i++) {
-#pragma HLS PIPELINE II=1
         data_t denom = row_sum[i] + (data_t)1.0;
     div_loop:
         for (int j = 0; j < N_COLS; j++) {
+#pragma HLS PIPELINE II=1
 #pragma HLS UNROLL factor=4
             tmp[i][j] = A[i][j] / denom;
         }
@@ -79,8 +79,8 @@ init_col_sum:
 
 phase_3:
     for (int i = 0; i < N_ROWS; i++) {
-#pragma HLS PIPELINE II=1
         for (int j = 0; j < N_COLS; j++) {
+#pragma HLS PIPELINE II=1
 #pragma HLS UNROLL factor=4
             col_sum_buf[j] += tmp[i][j];
         }
@@ -101,8 +101,8 @@ compute_scale:
     // ---------------------------------------------------------------------
 phase_4:
     for (int i = 0; i < N_ROWS; i++) {
-#pragma HLS PIPELINE II=1
         for (int j = 0; j < N_COLS; j++) {
+#pragma HLS PIPELINE II=1
 #pragma HLS UNROLL factor=4
             C[i][j] = tmp[i][j] * scale[j];
         }
