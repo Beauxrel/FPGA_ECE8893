@@ -35,7 +35,7 @@ dram_to_bram_outer:
     dram_to_bram_inner:
         for (int j = 0; j < N_COLS; j++)
         {
-#pragma HLS unroll factor = 1
+#pragma HLS unroll factor = 32
             A[i][j] = A_DRAM[i][j];
         }
     }
@@ -90,6 +90,7 @@ phase_3:
         for (int j = 0; j < N_COLS; j++)
         {
 #pragma HLS PIPELINE II = 1
+#pragma HLS unroll factor=8
             col_sum_buf[j] += tmp[i][j];
         }
     }
@@ -114,7 +115,8 @@ phase_4:
     {
         for (int j = 0; j < N_COLS; j++)
         {
-#pragma HLS PIPELINE II = 5
+#pragma HLS PIPELINE II = 1
+#pragma HLS unroll factor = 8
             C[i][j] = tmp[i][j] * scale[j];
         }
     }
@@ -128,7 +130,7 @@ bram_to_dram_outer:
     bram_to_dram_inner:
         for (int j = 0; j < N_COLS; j++)
         {
-#pragma HLS unroll factor = 1
+#pragma HLS unroll factor = 32
             C_DRAM[i][j] = C[i][j];
         }
     }
