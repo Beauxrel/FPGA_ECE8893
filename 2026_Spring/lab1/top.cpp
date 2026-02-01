@@ -33,7 +33,7 @@ dram_to_bram_outer:
     for (int i = 0; i < N_ROWS; i++)
     {
 #pragma HLS PIPELINE II = 9
-#pragma HLS unroll factor = 8
+#pragma HLS unroll factor = 2
     dram_to_bram_inner:
         for (int j = 0; j < N_COLS; j++)
         {
@@ -66,7 +66,7 @@ phase_2:
     {
         data_t denom = row_sum[i] + (data_t)1.0;
 #pragma HLS PIPELINE II = 8
-#pragma HLS unroll factor = 8
+#pragma HLS unroll factor = 2
     div_loop:
         for (int j = 0; j < N_COLS; j++)
         {
@@ -129,7 +129,7 @@ bram_to_dram_outer:
     for (int i = 0; i < N_ROWS; i++)
     {
 #pragma HLS PIPELINE II = 9
-#pragma HLS unroll factor = 8
+#pragma HLS unroll factor = 2
     bram_to_dram_inner:
         for (int j = 0; j < N_COLS; j++)
         {
