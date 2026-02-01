@@ -91,7 +91,6 @@ phase_4:
 bram_to_dram_outer:
     for (int i = 0; i < N_ROWS; i++)
     {
-#pragma HLS PIPELINE II=64
     bram_to_dram_inner:
         for (int j = 0; j < N_COLS; j++)
         {
