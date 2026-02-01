@@ -19,7 +19,7 @@ void top_kernel(data_t A_DRAM[N_ROWS][N_COLS],
     data_t col_sum[N_COLS];
     // Intermediate buffer for row-normalized values
     data_t tmp[N_ROWS][N_COLS];
-#pragma HLS ARRAY_PARTITION variable = tmp cyclic factor = 32 dim = 1
+#pragma HLS ARRAY_PARTITION variable = tmp cyclic factor = 32 dim = 2
 #pragma HLS ARRAY_PARTITION variable = A cyclic factor = 32 dim = 2
 #pragma HLS ARRAY_PARTITION variable = C cyclic factor = 32 dim = 2
 
