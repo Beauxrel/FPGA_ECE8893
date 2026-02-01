@@ -52,7 +52,7 @@ phase_1:
     compute_row:
         for (int j = 0; j < N_COLS; j++)
         {
-#pragma HLS UNROLL factor = 4
+#pragma HLS UNROLL factor = 2
             acc += A[i][j];
         }
         row_sum[i] = acc;
@@ -69,7 +69,7 @@ phase_2:
     div_loop:
         for (int j = 0; j < N_COLS; j++)
         {
-#pragma HLS UNROLL factor = 4
+#pragma HLS UNROLL factor = 2
             tmp[i][j] = A[i][j] / denom;
         }
     }
