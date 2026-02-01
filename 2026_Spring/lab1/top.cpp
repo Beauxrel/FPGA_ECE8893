@@ -66,23 +66,27 @@ col_init:
 #pragma HLS PIPELINE II=1
     col_sum[j] = 0;
     }
+
 phase_3:
     // Phase 2: Column-wise scaling
     for (int i = 0; i < N_ROWS; i++){
 #pragma HLS PIPELINE II=1
-col_sum:
+    col_sum:
         for (int j = 0; j < N_COLS; j++){
 #pragma HLS UNROLL factor=4
             col_sum[j] += tmp[i][j];
         }
     }
+compute_scale:
+    for (int j = 0; j < N_COLS; j++) {
+#pragma HLS PIPELINE II=1
+        scale[j] = col_sum_buf[j] / (data_t)N_ROWS;
+    }
 
 phase_4:
     for (int i = 0; i < N_ROWS; i++){
 #pragma HLS PIPELINE II=1
-    data_t scale = col_sum[j] / (data_t)N_ROWS;
     col_scaling:
-        
         for (int j = 0; j < N_COLS; j++){
 #pragma HLS UNROLL factor=4
             C[i][j] = tmp[i][j] * scale;
