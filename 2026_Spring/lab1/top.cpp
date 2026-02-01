@@ -22,7 +22,7 @@ void top_kernel(data_t A_DRAM[N_ROWS][N_COLS],
     // Partitioning to enable parallel column access (vectorize over j)
 #pragma HLS ARRAY_PARTITION variable = A cyclic factor = 32 dim = 2
 #pragma HLS ARRAY_PARTITION variable = C cyclic factor = 32 dim = 1
-#pragma HLS ARRAY_PARTITION variable = tmp cyclic factor = 8 dim = 1
+#pragma HLS ARRAY_PARTITION variable = tmp cyclic factor = 32 dim = 1
     // #pragma HLS ARRAY_PARTITION variable=scale cyclic factor=4 dim=1
     //  (row_sum/col_sum_buf left unpartitioned; col_sum_buf accessed sequentially)
 
