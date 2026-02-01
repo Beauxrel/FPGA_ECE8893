@@ -22,7 +22,7 @@ void top_kernel(data_t A_DRAM[N_ROWS][N_COLS],
     // Partitioning to enable parallel column access (vectorize over j)
 #pragma HLS ARRAY_PARTITION variable = A cyclic factor = 32 dim = 2
 #pragma HLS ARRAY_PARTITION variable = C cyclic factor = 32 dim = 1
-#pragma HLS ARRAY_PARTITION variable = tmp cyclic factor = 32 dim = 1
+#pragma HLS ARRAY_PARTITION variable = tmp cyclic factor = 8 dim = 1
     // #pragma HLS ARRAY_PARTITION variable=scale cyclic factor=4 dim=1
     //  (row_sum/col_sum_buf left unpartitioned; col_sum_buf accessed sequentially)
 
@@ -63,11 +63,11 @@ phase_1:
 phase_2:
     for (int i = 0; i < N_ROWS; i++)
     {
-#pragma HLS PIPELINE II = 5
         data_t denom = row_sum[i] + (data_t)1.0;
     div_loop:
         for (int j = 0; j < N_COLS; j++)
         {
+#pragma HLS PIPELINE II = 1
 #pragma HLS UNROLL factor = 4
             tmp[i][j] = A[i][j] / denom;
         }
@@ -89,6 +89,7 @@ phase_3:
     {
         for (int j = 0; j < N_COLS; j++)
         {
+#pragma HLS PIPELINE II = 1
 #pragma HLS UNROLL factor = 4
             col_sum_buf[j] += tmp[i][j];
         }
@@ -114,7 +115,6 @@ phase_4:
 #pragma HLS PIPELINE II = 5
         for (int j = 0; j < N_COLS; j++)
         {
-#pragma HLS UNROLL factor = 2
             C[i][j] = tmp[i][j] * scale[j];
         }
     }
