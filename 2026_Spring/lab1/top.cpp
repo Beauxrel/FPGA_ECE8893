@@ -32,10 +32,11 @@ void top_kernel(data_t A_DRAM[N_ROWS][N_COLS],
 dram_to_bram_outer:
     for (int i = 0; i < N_ROWS; i++)
     {
+#pragma HLS PIPELINE II = 9
     dram_to_bram_inner:
         for (int j = 0; j < N_COLS; j++)
         {
-#pragma HLS PIPELINE II = 1
+#pragma HLS unroll factor = 2
             A[i][j] = A_DRAM[i][j];
         }
     }
@@ -46,12 +47,12 @@ dram_to_bram_outer:
 phase_1:
     for (int i = 0; i < N_ROWS; i++)
     {
+#pragma HLS PIPELINE II = 5
         data_t acc = 0;
     compute_row:
         for (int j = 0; j < N_COLS; j++)
         {
-#pragma HLS PIPELINE II = 1
-#pragma HLS UNROLL factor = 8
+#pragma HLS UNROLL factor = 4
             acc += A[i][j];
         }
         row_sum[i] = acc;
@@ -126,10 +127,11 @@ phase_4:
 bram_to_dram_outer:
     for (int i = 0; i < N_ROWS; i++)
     {
+#pragma HLS PIPELINE II = 9
     bram_to_dram_inner:
         for (int j = 0; j < N_COLS; j++)
         {
-#pragma HLS PIPELINE II = 1
+#pragma HLS unroll factor = 2
             C_DRAM[i][j] = C[i][j];
         }
     }
