@@ -33,11 +33,10 @@ dram_to_bram_outer:
 phase_1:
     for (int i = 0; i < N_ROWS; i++){
         // Compute row sum
+#pragma HLS PIPELINE II=1
         row_sum[i] = 0; 
     compute_row:
         for (int j = 0; j < N_COLS; j++){
-#pragma HLS PIPELINE II=1
-#pragma HLS unroll factor=32
             row_sum[i] += A[i][j];
         }
     }
@@ -67,13 +66,12 @@ phase_3:
 
 phase_4:
     for (int j = 0; j < N_COLS; j++){
+#pragma HLS PIPELINE II=1
     // Apply scale to each element in the column
     // Compute average as scale
     data_t scale = col_sum[j] / (data_t)N_ROWS;
     col_scaling:
         for (int i = 0; i < N_ROWS; i++){
-#pragma HLS PIPELINE II=1
-#pragma HLS unroll factor=16
             C[i][j] = tmp[i][j] * scale;
         }
     }
