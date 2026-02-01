@@ -138,7 +138,7 @@ bram_to_dram_outer:
     bram_to_dram_inner:
         for (int j = 0; j < N_COLS; j++)
         {
-#pragma HLS unroll factor = 2
+#pragma HLS unroll factor = 8
             C_DRAM[i][j] = C[i][j];
         }
     }
