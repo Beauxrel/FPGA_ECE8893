@@ -106,7 +106,8 @@ phase_3:
 compute_scale:
     for (int j = 0; j < N_COLS; j++)
     {
-#pragma HLS PIPELINE II = 1
+#pragma HLS PIPELINE II = 8
+#pragma HLS unroll factor = 8
         scale[j] = col_sum_buf[j] / (data_t)N_ROWS;
     }
 
