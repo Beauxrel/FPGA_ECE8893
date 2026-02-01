@@ -50,7 +50,7 @@ phase_1:
     compute_row:
         for (int j = 0; j < N_COLS; j++)
         {
-#pragma HLS PIPELINE II = 1
+#pragma HLS PIPELINE II = 4
 #pragma HLS unroll factor=4
             acc += A[i][j];
         }
@@ -67,7 +67,7 @@ phase_2:
     div_loop:
         for (int j = 0; j < N_COLS; j++)
         {
-#pragma HLS PIPELINE II = 1
+#pragma HLS PIPELINE II = 4
 #pragma HLS unroll factor=4
             tmp[i][j] = A[i][j] / denom;
         }
