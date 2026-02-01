@@ -45,24 +45,22 @@ phase_1:
     
 phase_2:
     for (int i = 0; i < N_ROWS; i++){
+#pragma HLS PIPELINE II=1
         data_t denom = row_sum[i] + (data_t)1.0;
     div_loop:
         for (int j = 0; j < N_COLS; j++)
         {
-#pragma HLS PIPELINE II=1
-#pragma HLS unroll
             tmp[i][j] = A[i][j] / denom;
         }
     }
 phase_3:
     // Phase 2: Column-wise scaling
     for (int j = 0; j < N_COLS; j++){
+#pragma HLS PIPELINE II=1
         col_sum[j] = 0;
         // Compute column sum of normalized values
     col_sum:
         for (int i = 0; i < N_ROWS; i++){
-#pragma HLS PIPELINE II=1
-#pragma HLS unroll factor=32
             col_sum[j] += tmp[i][j];
         }
     }
