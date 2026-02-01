@@ -47,7 +47,7 @@ phase_1:
         data_t acc = 0;
     compute_row:
         for (int j = 0; j < N_COLS; j++) {
-#pragma HLS UNROLL factor=32
+#pragma HLS UNROLL factor=4
             acc += A[i][j];
         }
         row_sum[i] = acc;
@@ -62,7 +62,7 @@ phase_2:
         data_t denom = row_sum[i] + (data_t)1.0;
     div_loop:
         for (int j = 0; j < N_COLS; j++) {
-#pragma HLS UNROLL factor=32
+#pragma HLS UNROLL factor=4
             tmp[i][j] = A[i][j] / denom;
         }
     }
@@ -81,7 +81,7 @@ phase_3:
     for (int i = 0; i < N_ROWS; i++) {
 #pragma HLS PIPELINE II=1
         for (int j = 0; j < N_COLS; j++) {
-#pragma HLS UNROLL factor=32
+#pragma HLS UNROLL factor=4
             col_sum_buf[j] += tmp[i][j];
         }
     }
@@ -103,7 +103,7 @@ phase_4:
     for (int i = 0; i < N_ROWS; i++) {
 #pragma HLS PIPELINE II=1
         for (int j = 0; j < N_COLS; j++) {
-#pragma HLS UNROLL factor=32
+#pragma HLS UNROLL factor=4
             C[i][j] = tmp[i][j] * scale[j];
         }
     }
