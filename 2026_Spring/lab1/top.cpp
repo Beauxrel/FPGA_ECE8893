@@ -14,7 +14,7 @@ void top_kernel(data_t A_DRAM[N_ROWS][N_COLS],
 
     // ---- Tiling knobs (match unroll/partition factor nicely) ----
     const int TILE_COLS = 64;   // tile width in columns (adjust as needed)
-    const int VEC       = 16;    // keep your existing unroll factor
+    const int VEC       = 8;    // keep your existing unroll factor
 
     // On-chip buffers
     data_t A[N_ROWS][N_COLS];
@@ -28,7 +28,7 @@ void top_kernel(data_t A_DRAM[N_ROWS][N_COLS],
 #pragma HLS ARRAY_PARTITION variable=A   cyclic factor=VEC dim=2
 #pragma HLS ARRAY_PARTITION variable=C   cyclic factor=VEC dim=2
 #pragma HLS ARRAY_PARTITION variable=tmp cyclic factor=VEC dim=2
-#pragma HLS_ARRAY_PARTITION variable=col_sum_buf cyclic factore=VEC dim=2
+#pragma HLS ARRAY_PARTITION variable=col_sum_buf cyclic factore=VEC dim=1
 //#pragma HLS ARRAY_PARTITION variable=scale cyclic factor=VEC dim=1
     // (row_sum/col_sum_buf left unpartitioned; col_sum_buf accessed sequentially)
 
