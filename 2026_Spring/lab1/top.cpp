@@ -44,6 +44,7 @@ dram_to_bram_outer:
                 int j = jb + tj;
                 if (j < N_COLS) {
                     A[i][j] = A_DRAM[i][j];
+                    C[i][j] = 0;
                 }
             }
         }
