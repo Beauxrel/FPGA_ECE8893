@@ -14,7 +14,7 @@ void top_kernel(data_t A_DRAM[N_ROWS][N_COLS],
 
     // ---- Tiling knobs (match unroll/partition factor nicely) ----
     const int TILE_COLS = 64;   // tile width in columns (adjust as needed)
-    const int VEC       = 4;    // keep your existing unroll factor
+    const int VEC       = 8;    // keep your existing unroll factor
 
     // On-chip buffers
     data_t A[N_ROWS][N_COLS];
