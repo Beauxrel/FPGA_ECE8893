@@ -22,9 +22,9 @@ void top_kernel(data_t A_DRAM[N_ROWS][N_COLS],
 #pragma HLS ARRAY_PARTITION variable=C   cyclic factor=16 dim=2
 
     // Read in the data from DRAM to BRAM (tiled over columns)
-    for (int i = 0; i < N_ROWS; i++) {
-        for (int jb = 0; jb < N_COLS; jb += TILE_COLS) {
-            for (int tj = 0; tj < TILE_COLS; tj++) {
+L1:    for (int i = 0; i < N_ROWS; i++) {
+    L2:    for (int jb = 0; jb < N_COLS; jb += TILE_COLS) {
+        L3:    for (int tj = 0; tj < TILE_COLS; tj++) {
 #pragma HLS PIPELINE II=1
                 int j = jb + tj;
                 if (j < N_COLS) {
@@ -36,12 +36,12 @@ void top_kernel(data_t A_DRAM[N_ROWS][N_COLS],
     }
 
     // Phase 1: Row-wise normalization (tiled over columns)
-    for (int i = 0; i < N_ROWS; i++) {
+L4:    for (int i = 0; i < N_ROWS; i++) {
         data_t row_sum = 0.0;
 
         // Compute row sum
-        for (int jb = 0; jb < N_COLS; jb += TILE_COLS) {
-            for (int tj = 0; tj < TILE_COLS; tj++) {
+    L5:    for (int jb = 0; jb < N_COLS; jb += TILE_COLS) {
+        L6:    for (int tj = 0; tj < TILE_COLS; tj++) {
 #pragma HLS PIPELINE II=1
                 int j = jb + tj;
                 if (j < N_COLS) {
@@ -54,8 +54,8 @@ void top_kernel(data_t A_DRAM[N_ROWS][N_COLS],
         data_t denom = row_sum + (data_t)1.0;
 
         // Normalize each element in the row
-        for (int jb = 0; jb < N_COLS; jb += TILE_COLS) {
-            for (int tj = 0; tj < TILE_COLS; tj++) {
+L7:        for (int jb = 0; jb < N_COLS; jb += TILE_COLS) {
+    L8:        for (int tj = 0; tj < TILE_COLS; tj++) {
 #pragma HLS PIPELINE II=1
                 int j = jb + tj;
                 if (j < N_COLS) {
@@ -66,20 +66,20 @@ void top_kernel(data_t A_DRAM[N_ROWS][N_COLS],
     }
 
     // Phase 2: Column-wise scaling (tiled over columns; structure preserved)
-    for (int jb = 0; jb < N_COLS; jb += TILE_COLS) {
+L9:    for (int jb = 0; jb < N_COLS; jb += TILE_COLS) {
 
         data_t col_sum[TILE_COLS];
 #pragma HLS ARRAY_PARTITION variable=col_sum complete
 
         // init sums for this column tile
-        for (int tj = 0; tj < TILE_COLS; tj++) {
+L10:        for (int tj = 0; tj < TILE_COLS; tj++) {
 #pragma HLS PIPELINE II=1
             col_sum[tj] = 0.0;
         }
 
         // Compute column sums of normalized values (for this tile)
-        for (int i = 0; i < N_ROWS; i++) {
-            for (int tj = 0; tj < TILE_COLS; tj++) {
+L11:        for (int i = 0; i < N_ROWS; i++) {
+    L12:        for (int tj = 0; tj < TILE_COLS; tj++) {
 #pragma HLS PIPELINE II=1
                 int j = jb + tj;
                 if (j < N_COLS) {
@@ -89,7 +89,7 @@ void top_kernel(data_t A_DRAM[N_ROWS][N_COLS],
         }
 
         // Apply scale to each element in the column (for this tile)
-        for (int tj = 0; tj < TILE_COLS; tj++) {
+L13:        for (int tj = 0; tj < TILE_COLS; tj++) {
 #pragma HLS PIPELINE II=1
             int j = jb + tj;
             if (j < N_COLS) {
@@ -97,8 +97,9 @@ void top_kernel(data_t A_DRAM[N_ROWS][N_COLS],
                 data_t scale = col_sum[tj] / (data_t)N_ROWS;
 
                 // Apply scale down the column
-                for (int i = 0; i < N_ROWS; i++) {
-#pragma HLS PIPELINE II=1
+        L14:        for (int i = 0; i < N_ROWS; i++) {
+#pragma HLS PIPELINE II=8
+#pragma HLS unroll factor=8
                     C[i][j] = tmp[i][j] * scale;
                 }
             }
@@ -106,9 +107,9 @@ void top_kernel(data_t A_DRAM[N_ROWS][N_COLS],
     }
 
     // Write back from BRAM to DRAM (tiled over columns)
-    for (int i = 0; i < N_ROWS; i++) {
-        for (int jb = 0; jb < N_COLS; jb += TILE_COLS) {
-            for (int tj = 0; tj < TILE_COLS; tj++) {
+L15:    for (int i = 0; i < N_ROWS; i++) {
+    L16:    for (int jb = 0; jb < N_COLS; jb += TILE_COLS) {
+        L17:    for (int tj = 0; tj < TILE_COLS; tj++) {
 #pragma HLS PIPELINE II=1
                 int j = jb + tj;
                 if (j < N_COLS) {
