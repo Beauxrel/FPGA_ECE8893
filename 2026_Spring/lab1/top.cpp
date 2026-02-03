@@ -139,7 +139,7 @@ phase_4:
     for (int i = 0; i < N_ROWS; i++) {
         for (int jb = 0; jb < N_COLS; jb += TILE_COLS) {
             for (int tj = 0; tj < TILE_COLS; tj++) {
-#pragma HLS PIPELINE II=1
+#pragma HLS PIPELINE II=4
 #pragma HLS UNROLL factor=VEC
                 int j = jb + tj;
                 if (j < N_COLS) {
