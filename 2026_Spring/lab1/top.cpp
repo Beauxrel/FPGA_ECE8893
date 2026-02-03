@@ -80,7 +80,7 @@ phase_2:
         for (int jb = 0; jb < N_COLS; jb += TILE_COLS) {
         div_loop:
             for (int tj = 0; tj < TILE_COLS; tj++) {
-#pragma HLS PIPELINE II=1
+#pragma HLS PIPELINE II=4
 #pragma HLS UNROLL factor=VEC
                 int j = jb + tj;
                 if (j < N_COLS) {
@@ -123,7 +123,7 @@ phase_3:
 compute_scale:
     for (int jb = 0; jb < N_COLS; jb += TILE_COLS) {
         for (int tj = 0; tj < TILE_COLS; tj++) {
-#pragma HLS PIPELINE II=1
+#pragma HLS PIPELINE II=4
             int j = jb + tj;
             if (j < N_COLS) {
                 scale[j] = col_sum_buf[j] / (data_t)N_ROWS;
