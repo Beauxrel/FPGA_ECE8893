@@ -8,58 +8,109 @@ void top_kernel(data_t A_DRAM[N_ROWS][N_COLS],
 #pragma HLS interface m_axi port=C_DRAM offset=slave bundle=C
 #pragma HLS interface s_axilite port=return
 
+    // ---- Tiling knobs (keep small and power-of-2 to start) ----
+    const int TILE_COLS = 32;
+
     // On-chip buffers for A_DRAM and C_DRAM
     data_t A[N_ROWS][N_COLS];
     data_t C[N_ROWS][N_COLS];
     // Intermediate buffer for row-normalized values
     data_t tmp[N_ROWS][N_COLS];
-    // Read in the data from DRAM to BRAM
+
+    // Read in the data from DRAM to BRAM (tiled over columns)
     for (int i = 0; i < N_ROWS; i++) {
-        for (int j = 0; j < N_COLS; j++) {
-            A[i][j] = A_DRAM[i][j];
-            C[i][j] = 0;
+        for (int jb = 0; jb < N_COLS; jb += TILE_COLS) {
+            for (int tj = 0; tj < TILE_COLS; tj++) {
+#pragma HLS PIPELINE II=1
+                int j = jb + tj;
+                if (j < N_COLS) {
+                    A[i][j] = A_DRAM[i][j];
+                    C[i][j] = 0;
+                }
+            }
         }
     }
 
-    // Phase 1: Row-wise normalization
+    // Phase 1: Row-wise normalization (tiled over columns)
     for (int i = 0; i < N_ROWS; i++) {
         data_t row_sum = 0.0;
 
         // Compute row sum
-        for (int j = 0; j < N_COLS; j++) {
-            row_sum += A[i][j];
+        for (int jb = 0; jb < N_COLS; jb += TILE_COLS) {
+            for (int tj = 0; tj < TILE_COLS; tj++) {
+#pragma HLS PIPELINE II=1
+                int j = jb + tj;
+                if (j < N_COLS) {
+                    row_sum += A[i][j];
+                }
+            }
         }
 
         // Avoid division by zero, add small bias
         data_t denom = row_sum + (data_t)1.0;
 
         // Normalize each element in the row
-        for (int j = 0; j < N_COLS; j++) {
-            tmp[i][j] = A[i][j] / denom;
+        for (int jb = 0; jb < N_COLS; jb += TILE_COLS) {
+            for (int tj = 0; tj < TILE_COLS; tj++) {
+#pragma HLS PIPELINE II=1
+                int j = jb + tj;
+                if (j < N_COLS) {
+                    tmp[i][j] = A[i][j] / denom;
+                }
+            }
         }
     }
 
-    // Phase 2: Column-wise scaling
-    for (int j = 0; j < N_COLS; j++) {
-        data_t col_sum = 0.0;
+    // Phase 2: Column-wise scaling (tiled over columns; structure preserved)
+    for (int jb = 0; jb < N_COLS; jb += TILE_COLS) {
 
-        // Compute column sum of normalized values
-        for (int i = 0; i < N_ROWS; i++) {
-            col_sum += tmp[i][j];
+        data_t col_sum[TILE_COLS];
+#pragma HLS ARRAY_PARTITION variable=col_sum complete
+
+        // init sums for this column tile
+        for (int tj = 0; tj < TILE_COLS; tj++) {
+#pragma HLS PIPELINE II=1
+            col_sum[tj] = 0.0;
         }
 
-        // Compute average as scale
-        data_t scale = col_sum / (data_t)N_ROWS;
-
-        // Apply scale to each element in the column
+        // Compute column sums of normalized values (for this tile)
         for (int i = 0; i < N_ROWS; i++) {
-            C[i][j] = tmp[i][j] * scale;
+            for (int tj = 0; tj < TILE_COLS; tj++) {
+#pragma HLS PIPELINE II=1
+                int j = jb + tj;
+                if (j < N_COLS) {
+                    col_sum[tj] += tmp[i][j];
+                }
+            }
+        }
+
+        // Apply scale to each element in the column (for this tile)
+        for (int tj = 0; tj < TILE_COLS; tj++) {
+#pragma HLS PIPELINE II=1
+            int j = jb + tj;
+            if (j < N_COLS) {
+                // Compute average as scale
+                data_t scale = col_sum[tj] / (data_t)N_ROWS;
+
+                // Apply scale down the column
+                for (int i = 0; i < N_ROWS; i++) {
+#pragma HLS PIPELINE II=1
+                    C[i][j] = tmp[i][j] * scale;
+                }
+            }
         }
     }
-    
+
+    // Write back from BRAM to DRAM (tiled over columns)
     for (int i = 0; i < N_ROWS; i++) {
-        for (int j = 0; j < N_COLS; j++) {
-            C_DRAM[i][j] = C[i][j];
+        for (int jb = 0; jb < N_COLS; jb += TILE_COLS) {
+            for (int tj = 0; tj < TILE_COLS; tj++) {
+#pragma HLS PIPELINE II=1
+                int j = jb + tj;
+                if (j < N_COLS) {
+                    C_DRAM[i][j] = C[i][j];
+                }
+            }
         }
     }
 }
