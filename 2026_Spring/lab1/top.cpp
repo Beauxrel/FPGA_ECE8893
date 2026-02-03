@@ -61,7 +61,7 @@ phase_1:
         compute_row:
             for (int tj = 0; tj < TILE_COLS; tj++) {
 #pragma HLS PIPELINE II=1
-#pragma HLS UNROLL factor=VEC
+#pragma HLS UNROLL factor=8
                 int j = jb + tj;
                 if (j < N_COLS) {
                     acc += A[i][j];
@@ -109,7 +109,7 @@ phase_3:
         for (int jb = 0; jb < N_COLS; jb += TILE_COLS) {
             for (int tj = 0; tj < TILE_COLS; tj++) {
 #pragma HLS PIPELINE II=1
-#pragma HLS UNROLL factor=VEC
+#pragma HLS UNROLL factor=8
                 int j = jb + tj;
                 if (j < N_COLS) {
                     col_sum_buf[j] += tmp[i][j];
