@@ -41,6 +41,7 @@ L4:    for (int i = 0; i < N_ROWS; i++) {
 
         // Compute row sum
     L5:    for (int jb = 0; jb < N_COLS; jb += TILE_COLS) {
+#pragma HLS PIPELINE II=1
         L6:    for (int tj = 0; tj < TILE_COLS; tj++) {
 #pragma HLS PIPELINE II=1
                 int j = jb + tj;
