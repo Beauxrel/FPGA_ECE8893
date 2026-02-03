@@ -82,7 +82,7 @@ phase_2:
         div_loop:
             for (int tj = 0; tj < TILE_COLS; tj++) {
 #pragma HLS PIPELINE II=1
-#pragma HLS UNROLL factor=8
+#pragma HLS UNROLL factor=4
                 int j = jb + tj;
                 if (j < N_COLS) {
                     tmp[i][j] = A[i][j] / denom;
@@ -109,7 +109,7 @@ phase_3:
         for (int jb = 0; jb < N_COLS; jb += TILE_COLS) {
             for (int tj = 0; tj < TILE_COLS; tj++) {
 #pragma HLS PIPELINE II=1
-#pragma HLS UNROLL factor=8
+#pragma HLS UNROLL factor=4
                 int j = jb + tj;
                 if (j < N_COLS) {
                     col_sum_buf[j] += tmp[i][j];
@@ -141,7 +141,7 @@ phase_4:
         for (int jb = 0; jb < N_COLS; jb += TILE_COLS) {
             for (int tj = 0; tj < TILE_COLS; tj++) {
 #pragma HLS PIPELINE II=1
-#pragma HLS UNROLL factor=8
+#pragma HLS UNROLL factor=4
                 int j = jb + tj;
                 if (j < N_COLS) {
                     C[i][j] = tmp[i][j] * scale[j];
