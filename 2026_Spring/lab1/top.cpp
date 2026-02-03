@@ -14,7 +14,7 @@ void top_kernel(data_t A_DRAM[N_ROWS][N_COLS],
 
     // ---- Tiling knobs (match unroll/partition factor nicely) ----
     const int TILE_COLS = 64;   // tile width in columns (adjust as needed)
-    const int VEC       = 32;    // keep your existing unroll factor
+    const int VEC       = 16;    // keep your existing unroll factor
 
     // On-chip buffers
     data_t A[N_ROWS][N_COLS];
@@ -27,8 +27,8 @@ void top_kernel(data_t A_DRAM[N_ROWS][N_COLS],
     // Partitioning to enable parallel column access (vectorize over j)
 #pragma HLS ARRAY_PARTITION variable=A   cyclic factor=VEC dim=2
 #pragma HLS ARRAY_PARTITION variable=C   cyclic factor=VEC dim=2
-#pragma HLS ARRAY_PARTITION variable=tmp cyclic factor=8 dim=2
-#pragma HLS ARRAY_PARTITION variable=col_sum_buf cyclic factor=8 dim=1
+#pragma HLS ARRAY_PARTITION variable=tmp cyclic factor=VEC dim=2
+#pragma HLS ARRAY_PARTITION variable=col_sum_buf cyclic factor=VEC dim=2
 //#pragma HLS ARRAY_PARTITION variable=scale cyclic factor=VEC dim=1
     // (row_sum/col_sum_buf left unpartitioned; col_sum_buf accessed sequentially)
 
@@ -61,7 +61,7 @@ phase_1:
         compute_row:
             for (int tj = 0; tj < TILE_COLS; tj++) {
 #pragma HLS PIPELINE II=1
-#pragma HLS UNROLL factor=8
+#pragma HLS UNROLL factor=4
                 int j = jb + tj;
                 if (j < N_COLS) {
                     acc += A[i][j];
@@ -81,7 +81,7 @@ phase_2:
         for (int jb = 0; jb < N_COLS; jb += TILE_COLS) {
         div_loop:
             for (int tj = 0; tj < TILE_COLS; tj++) {
-#pragma HLS PIPELINE II=1
+#pragma HLS PIPELINE II=4
 #pragma HLS UNROLL factor=4
                 int j = jb + tj;
                 if (j < N_COLS) {
@@ -124,7 +124,7 @@ phase_3:
 compute_scale:
     for (int jb = 0; jb < N_COLS; jb += TILE_COLS) {
         for (int tj = 0; tj < TILE_COLS; tj++) {
-#pragma HLS PIPELINE II=4
+#pragma HLS PIPELINE II=1
             int j = jb + tj;
             if (j < N_COLS) {
                 scale[j] = col_sum_buf[j] / (data_t)N_ROWS;
@@ -140,7 +140,7 @@ phase_4:
     for (int i = 0; i < N_ROWS; i++) {
         for (int jb = 0; jb < N_COLS; jb += TILE_COLS) {
             for (int tj = 0; tj < TILE_COLS; tj++) {
-#pragma HLS PIPELINE II=1
+#pragma HLS PIPELINE II=4
 #pragma HLS UNROLL factor=4
                 int j = jb + tj;
                 if (j < N_COLS) {
@@ -159,7 +159,7 @@ bram_to_dram_outer:
         for (int jb = 0; jb < N_COLS; jb += TILE_COLS) {
         bram_to_dram_inner:
             for (int tj = 0; tj < TILE_COLS; tj++) {
-#pragma HLS PIPELINE II=4
+#pragma HLS PIPELINE II=1
                 int j = jb + tj;
                 if (j < N_COLS) {
                     C_DRAM[i][j] = C[i][j];
