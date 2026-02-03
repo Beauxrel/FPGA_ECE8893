@@ -81,8 +81,8 @@ phase_2:
         for (int jb = 0; jb < N_COLS; jb += TILE_COLS) {
         div_loop:
             for (int tj = 0; tj < TILE_COLS; tj++) {
-#pragma HLS PIPELINE II=1
-#pragma HLS UNROLL factor=8
+#pragma HLS PIPELINE II=2
+#pragma HLS UNROLL factor=4
                 int j = jb + tj;
                 if (j < N_COLS) {
                     tmp[i][j] = A[i][j] / denom;
@@ -108,7 +108,7 @@ phase_3:
     for (int i = 0; i < N_ROWS; i++) {
         for (int jb = 0; jb < N_COLS; jb += TILE_COLS) {
             for (int tj = 0; tj < TILE_COLS; tj++) {
-#pragma HLS PIPELINE II=1
+#pragma HLS PIPELINE II=2
 #pragma HLS UNROLL factor=4
                 int j = jb + tj;
                 if (j < N_COLS) {
