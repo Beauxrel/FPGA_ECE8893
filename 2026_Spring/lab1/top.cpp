@@ -21,7 +21,7 @@ void top_kernel(data_t A_DRAM[N_ROWS][N_COLS],
 #pragma HLS ARRAY_PARTITION variable = C cyclic factor = 16 dim = 2
 
 dram_to_bram_outer:
-#pragma HLS FLATTEN off
+#pragma HLS LOOP_FLATTEN off
     for (int i = 0; i < N_ROWS; i++){
     dram_to_bram_inner:
 #pragma HLS PIPELINE
@@ -82,7 +82,7 @@ phase_4:
     }
 
 bram_to_dram_outer:
-#pragma HLS FLATTEN off
+#pragma HLS LOOP_FLATTEN off
     for (int i = 0; i < N_ROWS; i++){
 bram_to_dram_inner:
 #pragma HLS PIPELINE
