@@ -36,17 +36,12 @@ void top_kernel(data_t A_DRAM[N_ROWS][N_COLS],
     // DRAM -> BRAM (burst-friendly): pipeline inner loop + column tiling
     // ---------------------------------------------------------------------
 dram_to_bram_outer:
-    for (int i = 0; i < N_ROWS; i++) {
-    dram_to_bram_tile:
-        for (int jb = 0; jb < N_COLS; jb += TILE_COLS) {
-        dram_to_bram_inner:
-            for (int tj = 0; tj < TILE_COLS; tj++) {
+#pragma HLS FLATTEN off
+    for (int i = 0; i < N_ROWS; i++){
+    dram_to_bram_inner:
+        for (int j = 0; j < N_COLS; j++){
 #pragma HLS PIPELINE II=1
-                int j = jb + tj;
-                if (j < N_COLS) {
-                    A[i][j] = A_DRAM[i][j];
-                }
-            }
+            A[i][j] = A_DRAM[i][j];
         }
     }
 
@@ -154,17 +149,12 @@ phase_4:
     // BRAM -> DRAM (burst-friendly): pipeline inner loop + column tiling
     // ---------------------------------------------------------------------
 bram_to_dram_outer:
-    for (int i = 0; i < N_ROWS; i++) {
-    bram_to_dram_tile:
-        for (int jb = 0; jb < N_COLS; jb += TILE_COLS) {
-        bram_to_dram_inner:
-            for (int tj = 0; tj < TILE_COLS; tj++) {
+#pragma HLS FLATTEN off
+    for (int i = 0; i < N_ROWS; i++){
+bram_to_dram_inner:
+        for (int j = 0; j < N_COLS; j++){
 #pragma HLS PIPELINE II=1
-                int j = jb + tj;
-                if (j < N_COLS) {
-                    C_DRAM[i][j] = C[i][j];
-                }
-            }
+            C_DRAM[i][j] = C[i][j];
         }
     }
 }
