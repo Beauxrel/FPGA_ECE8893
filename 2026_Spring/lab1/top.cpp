@@ -16,11 +16,9 @@ void top_kernel(data_t A_DRAM[N_ROWS][N_COLS],
     data_t col_sum[N_COLS];
     // Intermediate buffer for row-normalized values
     data_t tmp[N_ROWS][N_COLS];
-#pragma HLS ARRAY_PARTITION variable = tmp cyclic factor = 10 dim = 1
-#pragma HLS ARRAY_PARTITION variable = A cyclic factor = 10 dim = 2
-#pragma HLS ARRAY_PARTITION variable = C cyclic factor = 10 dim = 2
-#pragma HLS ARRAY_PARTITION variable = row_sum cyclic factor = 10 dim = 1
-#pragma HLS ARRAY_PARTITION variable = col_sum cyclic factor = 10 dim = 1
+#pragma HLS ARRAY_PARTITION variable = tmp cyclic factor = 8 dim = 1
+#pragma HLS ARRAY_PARTITION variable = A cyclic factor = 16 dim = 2
+#pragma HLS ARRAY_PARTITION variable = C cyclic factor = 16 dim = 2
 
 dram_to_bram_outer: for (int i = 0; i < N_ROWS; i++){
 #pragma HLS LOOP_FLATTEN off
