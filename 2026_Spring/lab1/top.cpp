@@ -17,8 +17,10 @@ void top_kernel(data_t A_DRAM[N_ROWS][N_COLS],
     // Intermediate buffer for row-normalized values
     data_t tmp[N_ROWS][N_COLS];
 #pragma HLS ARRAY_PARTITION variable = tmp cyclic factor = 8 dim = 1
-#pragma HLS ARRAY_PARTITION variable = A cyclic factor = 16 dim = 2
-#pragma HLS ARRAY_PARTITION variable = C cyclic factor = 16 dim = 2
+#pragma HLS ARRAY_PARTITION variable = A cyclic factor = 10 dim = 2
+#pragma HLS ARRAY_PARTITION variable = C cyclic factor = 10 dim = 2
+#pragma HLS ARRAY_PARTITION variable = row_sum cyclic factor = 10 dim = 1
+#pragma HLS ARRAY_PARTITION variable = col_sum cyclic factor = 10 dim = 1
 
 dram_to_bram_outer: for (int i = 0; i < N_ROWS; i++){
 #pragma HLS LOOP_FLATTEN off
@@ -31,9 +33,10 @@ dram_to_bram_inner:     for (int j = 0; j < N_COLS; j++){
     // Phase 1: Row-wise normalization
 phase_1:    for (int i = 0; i < N_ROWS; i++){
         // Compute row sum
-                row_sum[i] = 0; 
+                row_sum[i] = 0;
+#pragma HLS PIPELINE II=1 
 compute_row:    for (int j = 0; j < N_COLS; j++){
-#pragma HLS PIPELINE II=1
+#pragma HLS unroll factor=10
                     row_sum[i] += A[i][j];
                 }
             }
@@ -43,7 +46,7 @@ phase_2:    for (int i = 0; i < N_ROWS; i++){
         data_t denom = row_sum[i] + (data_t)1.0;
 #pragma HLS PIPELINE II=1
 div_loop:       for (int j = 0; j < N_COLS; j++){
-#pragma HLS unroll factor=4
+#pragma HLS unroll factor=10
                     tmp[i][j] = A[i][j] / denom;
                 }
             }
@@ -61,7 +64,7 @@ phase_4:    for (int j = 0; j < N_COLS; j++){
                 data_t scale = col_sum[j] / (data_t)N_ROWS;
 #pragma HLS PIPELINE II=1
 col_scaling:    for (int i = 0; i < N_ROWS; i++){
-#pragma HLS unroll factor=4
+#pragma HLS unroll factor=10
                     C[i][j] = tmp[i][j] * scale;
                 }
             }
