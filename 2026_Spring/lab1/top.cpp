@@ -52,19 +52,19 @@ div_loop:       for (int j = 0; j < N_COLS; j++){
             }
 phase_3:    for (int j = 0; j < N_COLS; j++){
                 col_sum[j] = 0;
-#pragma HLS PIPELINE II=1
+#pragma HLS PIPELINE II=2
 // Compute column sum of normalized values
 col_sum:            for (int i = 0; i < N_ROWS; i++){
-#pragma HLS unroll factor=10
+#pragma HLS unroll factor=4
                         col_sum[j] += tmp[i][j];
                     }
             }
 
 phase_4:    for (int j = 0; j < N_COLS; j++){
                 data_t scale = col_sum[j] / (data_t)N_ROWS;
-#pragma HLS PIPELINE II=1
+#pragma HLS PIPELINE II=2
 col_scaling:    for (int i = 0; i < N_ROWS; i++){
-#pragma HLS unroll factor=10
+#pragma HLS unroll factor=4
                     C[i][j] = tmp[i][j] * scale;
                 }
             }
