@@ -22,6 +22,9 @@ void top_kernel(const data_t A_in[NX][NY],
     const data_t wa = (data_t)0.10;
     const data_t wd = (data_t)0.025;
 
+#pragma HLS array_partition variable=cur dim=2 type=cyclic
+#pragma HLS array_partition variable=nxt dim=2 type=cyclic
+
     // Copy input into cur
     for (int i = 0; i < NX; i++) {
 #pragma HLS pipeline II=1
