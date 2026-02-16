@@ -24,7 +24,9 @@ void top_kernel(const data_t A_in[NX][NY],
 
     // Copy input into cur
     for (int i = 0; i < NX; i++) {
+#pragma HLS pipeline II=1
         for (int j = 0; j < NY; j++) {
+#pragma HLS loop_flatten
             cur[i][j] = A_in[i][j];
         }
     }
@@ -61,7 +63,9 @@ void top_kernel(const data_t A_in[NX][NY],
 
         // Baseline swap: full copy nxt -> cur
         for (int i = 0; i < NX; i++) {
+#pragma HLS pipeline II=1
             for (int j = 0; j < NY; j++) {
+#pragma HLS loop_flatten
                 cur[i][j] = nxt[i][j];
             }
         }
@@ -69,6 +73,7 @@ void top_kernel(const data_t A_in[NX][NY],
 
     // Write output
     for (int i = 0; i < NX; i++) {
+#pragma HLS pipeline II=1
         for (int j = 0; j < NY; j++) {
             A_out[i][j] = cur[i][j];
         }
