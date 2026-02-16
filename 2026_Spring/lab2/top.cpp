@@ -37,12 +37,12 @@ void top_kernel(const data_t A_in[NX][NY],
     for (int t = 0; t < TSTEPS; t++) {
         // Copy boundaries unchanged
         for (int j = 0; j < NY; j++) {
-#pragma HLS pipeline II=1
+#pragma HLS unroll factor=32
             nxt[0][j]      = cur[0][j];
             nxt[NX - 1][j] = cur[NX - 1][j];
         }
         for (int i = 0; i < NX; i++) {
-#pragma HLS pipeline II=1
+#pragma HLS unroll factor=32
             nxt[i][0]      = cur[i][0];
             nxt[i][NY - 1] = cur[i][NY - 1];
         }
@@ -68,7 +68,7 @@ void top_kernel(const data_t A_in[NX][NY],
         // Baseline swap: full copy nxt -> cur
         for (int i = 0; i < NX; i++) {
             for (int j = 0; j < NY; j++) {
-#pragma HLS pipeline II=1
+#pragma HLS unroll factor=32
                 cur[i][j] = nxt[i][j];
             }
         }
