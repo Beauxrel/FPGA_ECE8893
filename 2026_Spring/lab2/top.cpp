@@ -22,12 +22,12 @@ void top_kernel(const data_t A_in[NX][NY],
     const data_t wa = (data_t)0.10;
     const data_t wd = (data_t)0.025;
 
-#pragma HLS array_partition variable=cur dim=2 type=cyclic factor=8
-#pragma HLS array_partition variable=nxt dim=2 type=cyclic factor=8
+#pragma HLS ARRAY_PARTITION variable = cur cyclic factor = 16 dim = 2
+#pragma HLS ARRAY_PARTITION variable = nxt cyclic factor = 16 dim = 2
+
 
     // Copy input into cur
     for (int i = 0; i < NX; i++) {
-#pragma HLS pipeline II=1
         for (int j = 0; j < NY; j++) {
             cur[i][j] = A_in[i][j];
         }
@@ -37,10 +37,12 @@ void top_kernel(const data_t A_in[NX][NY],
     for (int t = 0; t < TSTEPS; t++) {
         // Copy boundaries unchanged
         for (int j = 0; j < NY; j++) {
+#pragma HLS unroll factor=4
             nxt[0][j]      = cur[0][j];
             nxt[NX - 1][j] = cur[NX - 1][j];
         }
         for (int i = 0; i < NX; i++) {
+#pragma HLS unroll factor=4
             nxt[i][0]      = cur[i][0];
             nxt[i][NY - 1] = cur[i][NY - 1];
         }
@@ -66,6 +68,7 @@ void top_kernel(const data_t A_in[NX][NY],
         // Baseline swap: full copy nxt -> cur
         for (int i = 0; i < NX; i++) {
             for (int j = 0; j < NY; j++) {
+#pragma HLS unroll factor=4
                 cur[i][j] = nxt[i][j];
             }
         }
@@ -73,7 +76,6 @@ void top_kernel(const data_t A_in[NX][NY],
 
     // Write output
     for (int i = 0; i < NX; i++) {
-#pragma HLS pipeline II=1
         for (int j = 0; j < NY; j++) {
             A_out[i][j] = cur[i][j];
         }
