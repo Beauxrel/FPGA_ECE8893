@@ -40,6 +40,8 @@ jobs:
           echo $PATH
           mkdir -p logs out
           cd 2026_Spring/lab2
+          rm -rf project_1
+          rm -rf logs
 
           echo "Running make..."
           make
