@@ -7,9 +7,9 @@
 //
 // Boundary handling: boundaries are copied unchanged each timestep.
 
-void top_kernel(data_t A_DRAM[NX][NY], data_t C_DRAM[NX][NY]) {
-    #pragma HLS interface m_axi port=A_DRAM offset=slave bundle=gmem0 depth=16384
-    #pragma HLS interface m_axi port=C_DRAM offset=slave bundle=gmem1 depth=16384
+void top_kernel(data_t A_in[NX][NY], data_t A_out[NX][NY]) {
+    #pragma HLS interface m_axi port=A_in offset=slave bundle=gmem0 depth=16384
+    #pragma HLS interface m_axi port=A_out offset=slave bundle=gmem1 depth=16384
     #pragma HLS interface s_axilite port=return 
 
     static data_t cur[NX][NY];
@@ -23,7 +23,7 @@ void top_kernel(data_t A_DRAM[NX][NY], data_t C_DRAM[NX][NY]) {
     // Copy input into cur
     for (int i = 0; i < NX; i++) {
         for (int j = 0; j < NY; j++) {
-            cur[i][j] = A_DRAM[i][j];
+            cur[i][j] = A_in[i][j];
         }
     }
 
@@ -68,7 +68,7 @@ void top_kernel(data_t A_DRAM[NX][NY], data_t C_DRAM[NX][NY]) {
     // Write output
     for (int i = 0; i < NX; i++) {
         for (int j = 0; j < NY; j++) {
-            C_DRAM[i][j] = cur[i][j];
+            A_out[i][j] = cur[i][j];
         }
     }
 }
