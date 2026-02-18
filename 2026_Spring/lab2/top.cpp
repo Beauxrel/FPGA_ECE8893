@@ -7,7 +7,7 @@
 //
 // Boundary handling: boundaries are copied unchanged each timestep.
 
-void top_kernel(data_t A_in[NX][NY], data_t A_out[NX][NY]) {
+void top_kernel(const data_t A_in[NX][NY], data_t A_out[NX][NY]) {
     #pragma HLS interface m_axi port=A_in offset=slave bundle=gmem0 depth=16384
     #pragma HLS interface m_axi port=A_out offset=slave bundle=gmem1 depth=16384
     #pragma HLS interface s_axilite port=return 
