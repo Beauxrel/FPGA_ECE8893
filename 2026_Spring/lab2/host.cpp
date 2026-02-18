@@ -15,7 +15,7 @@ static void init_input(data_t A[NX][NY]) {
 }
 
 // Golden model in fixed-point (bit-exact target)
-static void golden_kernel(const data_t A_in[NX][NY],
+static void golden_kernel(data_t A_in[NX][NY],
                           data_t A_out[NX][NY]) {
     static data_t cur[NX][NY];
     static data_t nxt[NX][NY];
