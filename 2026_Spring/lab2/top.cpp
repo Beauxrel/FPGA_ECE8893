@@ -12,8 +12,6 @@ void top_kernel(data_t A_DRAM[NX][NY], data_t C_DRAM[NX][NY]) {
     #pragma HLS interface m_axi port=C_DRAM offset=slave bundle=gmem1 depth=16384
     #pragma HLS interface s_axilite port=return 
 
-    data_t gmem0[N_ROWS][N_COLS];
-    data_t gmem1[N_ROWS][N_COLS];
     static data_t cur[NX][NY];
     static data_t nxt[NX][NY];
 
@@ -70,13 +68,7 @@ void top_kernel(data_t A_DRAM[NX][NY], data_t C_DRAM[NX][NY]) {
     // Write output
     for (int i = 0; i < NX; i++) {
         for (int j = 0; j < NY; j++) {
-            A_out[i][j] = cur[i][j];
-        }
-    }
-    
-    for (int i = 0; i < N_ROWS; i++) {
-        for (int j = 0; j < N_COLS; j++) {
-            C_DRAM[i][j] = gmem1[i][j];
+            C_DRAM[i][j] = cur[i][j];
         }
     }
 }
