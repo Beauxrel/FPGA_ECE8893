@@ -17,11 +17,13 @@ void top_kernel(const data_t A_in[NX][NY], data_t A_out[NX][NY]) {
 static data_t buf[2][NX][NY];
 #pragma HLS array_partition variable=buf cyclic factor=2 dim=3
 
-    // Copy input into buf[0]
-    INIT_I: for (int i = 0; i < NX; i++) {
-        INIT_J: for (int j = 0; j < NY; j++) {
-            #pragma HLS pipeline II=1
-            buf[0][i][j] = A_in[i][j];
+    // Unpack input
+    INIT_I: for (int i = 0; i < NX*NY*sizeof(data_t)/64; i++) {
+        #pragma HLS pipeline II=1
+        ap_uint<512> chunk = A_in[i];
+        for (int k = 0; k < 16; k++) {
+            int idx = i * 16 + k;
+            cur[idx / NY][idx % NY].range(31,0) = chunk.range(32*k+31, 32*k);
         }
     }
 
@@ -54,12 +56,14 @@ static data_t buf[2][NX][NY];
         // No swap loop needed — rd/wr flip for free next iteration
     }
 
-    // Write output — read from whichever buffer was last written
-    int final_buf = TSTEPS & 1;
-    OUT_I: for (int i = 0; i < NX; i++) {
-        OUT_J: for (int j = 0; j < NY; j++) {
-            #pragma HLS pipeline II=1
-            A_out[i][j] = buf[final_buf][i][j];
+    // Write output
+    OUT_I: for (int i = 0; i < NX*NY*sizeof(data_t)/64; i++) {
+        #pragma HLS pipeline II=1
+        ap_uint<512> chunk = 0;
+        for (int k = 0; k < 16; k++) {
+            int idx = i * 16 + k;
+            chunk.range(32*k+31, 32*k) = cur[idx / NY][idx % NY].range(31,0);
         }
+        A_out[i] = chunk;
     }
 }
