@@ -1,41 +1,38 @@
 #include "dcl.h"
 
-void top_kernel(const data_t A_in[NX][NY], data_t A_out[NX][NY]) {
-#pragma HLS interface m_axi port=A_in  offset=slave bundle=gmem0 depth=16384
-#pragma HLS interface m_axi port=A_out offset=slave bundle=gmem1 depth=16384
+void top_kernel(const ap_uint<512> A_in[NX*NY/16], ap_uint<512> A_out[NX*NY/16]) {
+#pragma HLS interface m_axi port=A_in  offset=slave bundle=gmem0 depth=1024
+#pragma HLS interface m_axi port=A_out offset=slave bundle=gmem1 depth=1024
 #pragma HLS interface s_axilite port=return
-
-//     static data_t cur[NX][NY];
-//     static data_t nxt[NX][NY];
-// #pragma HLS array_partition variable=cur cyclic factor=2 dim=2
-// #pragma HLS array_partition variable=nxt cyclic factor=2 dim=2
 
     const data_t wc = (data_t)0.50;
     const data_t wa = (data_t)0.10;
     const data_t wd = (data_t)0.025;
 
-static data_t buf[2][NX][NY];
-#pragma HLS array_partition variable=buf cyclic factor=2 dim=3
+    static data_t buf[2][NX][NY];
+#pragma HLS array_partition variable=buf cyclic factor=16 dim=3
 
-    // Unpack input
-    INIT_I: for (int i = 0; i < NX*NY*sizeof(data_t)/64; i++) {
-        #pragma HLS pipeline II=1
+    // Unpack input into buf[0]
+INIT_I: for (int i = 0; i < NX*NY/16; i++) {
+#pragma HLS pipeline II=1
         ap_uint<512> chunk = A_in[i];
         for (int k = 0; k < 16; k++) {
+#pragma HLS unroll
             int idx = i * 16 + k;
-            cur[idx / NY][idx % NY].range(31,0) = chunk.range(32*k+31, 32*k);
+            ap_uint<32> tmp = chunk.range(32*k+31, 32*k);
+            buf[0][idx / NY][idx % NY] = *reinterpret_cast<data_t*>(&tmp);
         }
     }
 
     // Time stepping
-    TIME: for (int t = 0; t < TSTEPS; t++) {
-        int rd = t & 1;       // alternates 0, 1, 0, 1...
-        int wr = 1 - rd;      // alternates 1, 0, 1, 0...
+TIME: for (int t = 0; t < TSTEPS; t++) {
+        const int rd = t & 1;
+        const int wr = 1 - rd;
 
-        STENCIL_I: for (int i = 0; i < NX; i++) {
-            STENCIL_J: for (int j = 0; j < NY; j++) {
-                #pragma HLS pipeline II=1
-                #pragma HLS dependence variable=buf inter false
+STENCIL_I: for (int i = 0; i < NX; i++) {
+STENCIL_J: for (int j = 0; j < NY; j++) {
+#pragma HLS pipeline II=1
+#pragma HLS dependence variable=buf inter false
                 if (i == 0 || i == NX-1 || j == 0 || j == NY-1) {
                     buf[wr][i][j] = buf[rd][i][j];
                 } else {
@@ -53,16 +50,18 @@ static data_t buf[2][NX][NY];
                 }
             }
         }
-        // No swap loop needed — rd/wr flip for free next iteration
     }
 
-    // Write output
-    OUT_I: for (int i = 0; i < NX*NY*sizeof(data_t)/64; i++) {
-        #pragma HLS pipeline II=1
+    // Pack output from last written buffer
+    const int final_buf = TSTEPS & 1;
+OUT_I: for (int i = 0; i < NX*NY/16; i++) {
+#pragma HLS pipeline II=1
         ap_uint<512> chunk = 0;
         for (int k = 0; k < 16; k++) {
+#pragma HLS unroll
             int idx = i * 16 + k;
-            chunk.range(32*k+31, 32*k) = cur[idx / NY][idx % NY].range(31,0);
+            data_t val = buf[final_buf][idx / NY][idx % NY];
+            chunk.range(32*k+31, 32*k) = *reinterpret_cast<ap_uint<32>*>(&val);
         }
         A_out[i] = chunk;
     }
