@@ -62,3 +62,4 @@ static data_t buf[2][NX][NY];
             A_out[i][j] = buf[final_buf][i][j];
         }
     }
+}
