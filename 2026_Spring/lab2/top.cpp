@@ -1,14 +1,14 @@
 #include "dcl.h"
 
 void top_kernel(const data_t A_in[NX][NY], data_t A_out[NX][NY]) {
-#pragma HLS interface m_axi port=A_in  offset=slave bundle=gmem0 depth=16384
-#pragma HLS interface m_axi port=A_out offset=slave bundle=gmem1 depth=16384
+#pragma HLS interface m_axi port=A_in  offset=slave bundle=gmem0 depth=16384 data_width=512
+#pragma HLS interface m_axi port=A_out offset=slave bundle=gmem1 depth=16384 data_width=512
 #pragma HLS interface s_axilite port=return
 
     static data_t cur[NX][NY];
     static data_t nxt[NX][NY];
-#pragma HLS array_partition variable=cur cyclic factor=2 dim=2
-#pragma HLS array_partition variable=nxt cyclic factor=2 dim=2
+#pragma HLS array_partition variable=cur cyclic factor=16 dim=2
+#pragma HLS array_partition variable=nxt cyclic factor=16 dim=2
 
     const data_t wc = (data_t)0.50;
     const data_t wa = (data_t)0.10;
