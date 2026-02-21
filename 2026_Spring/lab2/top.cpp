@@ -25,9 +25,9 @@ void top_kernel(const data_t A_in[NX][NY], data_t A_out[NX][NY]) {
 #pragma HLS unroll
             int idx = i * 16 + k;
             ap_uint<32> tmp = chunk.range(32*k+31, 32*k);
-            union { ap_uint<32> u; data_t f; } conv;
-            conv.u = tmp;
-            buf[0][idx / NY][idx % NY] = conv.f;
+            data_t val;
+            val.range(23, 0) = tmp.range(23, 0);
+            buf[0][idx / NY][idx % NY] = val;
         }
     }
 
@@ -125,9 +125,9 @@ void top_kernel(const data_t A_in[NX][NY], data_t A_out[NX][NY]) {
 #pragma HLS unroll
             int idx = i * 16 + k;
             data_t val = buf[final_buf][idx / NY][idx % NY];
-            union { data_t f; ap_uint<32> u; } conv;
-            conv.f = val;
-            chunk.range(32*k+31, 32*k) = conv.u;
+            ap_uint<32> packed = 0;
+            packed.range(23, 0) = val.range(23, 0);
+            chunk.range(32*k+31, 32*k) = packed;
         }
         A_OUT_WIDE[i] = chunk;
     }
