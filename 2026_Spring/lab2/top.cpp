@@ -38,78 +38,61 @@ void top_kernel(const data_t A_in[NX][NY], data_t A_out[NX][NY]) {
         const int rd = t & 1;
         const int wr = 1 - rd;
 
-        // Line buffer: 3 rows cached locally
         static data_t lb[3][NY];
-#pragma HLS array_partition variable=lb complete dim=1
-#pragma HLS array_partition variable=lb cyclic factor=16 dim=2
+    #pragma HLS array_partition variable=lb complete dim=1
+    #pragma HLS array_partition variable=lb cyclic factor=16 dim=2
 
-        // -------------------------------------------------------
-        // Prime line buffer: load rows 0 and 1
-        // -------------------------------------------------------
+        // Copy boundaries
+        TOP_BOUNDARY: for (int j = 0; j < NY; j++) {
+    #pragma HLS pipeline II=1
+            buf[wr][0][j]    = buf[rd][0][j];
+            buf[wr][NX-1][j] = buf[rd][NX-1][j];
+        }
+
+        // Prime lb with first two rows
         PRIME: for (int j = 0; j < NY; j++) {
-#pragma HLS pipeline II=1
+    #pragma HLS pipeline II=1
             lb[0][j] = buf[rd][0][j];
             lb[1][j] = buf[rd][1][j];
         }
 
-        // -------------------------------------------------------
-        // Copy top boundary row unchanged
-        // -------------------------------------------------------
-        TOP_BOUNDARY: for (int j = 0; j < NY; j++) {
-#pragma HLS pipeline II=1
-            buf[wr][0][j] = buf[rd][0][j];
-        }
-
-        // -------------------------------------------------------
-        // Main stencil loop over interior rows
-        // -------------------------------------------------------
+        // Outer row loop — NOT pipelined, inner j loop IS
         STENCIL_I: for (int i = 1; i < NX-1; i++) {
 
-            // Load row i+1 into lb[2]
-            LOAD_ROW: for (int j = 0; j < NY; j++) {
-#pragma HLS pipeline II=1
-                lb[2][j] = buf[rd][i+1][j];
+            // Single j loop: load lb[2], compute, write — all at II=1
+            STENCIL_J: for (int j = 0; j < NY; j++) {
+    #pragma HLS pipeline II=1
+    #pragma HLS dependence variable=lb inter false
+    #pragma HLS dependence variable=buf inter false
+
+                data_t new_row = buf[rd][i+1][j];
+                lb[2][j] = new_row;
+
+                if (j == 0 || j == NY-1) {
+                    buf[wr][i][j] = buf[rd][i][j];
+                } else {
+                    acc_t sum_axis = (acc_t)lb[0][j]   + (acc_t)lb[2][j]   +
+                                    (acc_t)lb[1][j-1] + (acc_t)lb[1][j+1];
+
+                    acc_t sum_diag = (acc_t)lb[0][j-1] + (acc_t)lb[0][j+1] +
+                                    (acc_t)lb[2][j-1] + (acc_t)lb[2][j+1];
+
+                    acc_t center   = (acc_t)lb[1][j];
+
+                    buf[wr][i][j] = (data_t)(
+                                        (acc_t)wc * center +
+                                        (acc_t)wa * sum_axis +
+                                        (acc_t)wd * sum_diag
+                                    );
+                }
             }
 
-            // Left boundary
-            buf[wr][i][0] = buf[rd][i][0];
-
-            // Interior columns
-            STENCIL_J: for (int j = 1; j < NY-1; j++) {
-#pragma HLS pipeline II=1
-#pragma HLS dependence variable=lb inter false
-                acc_t sum_axis = (acc_t)lb[0][j]   + (acc_t)lb[2][j]   +
-                                 (acc_t)lb[1][j-1] + (acc_t)lb[1][j+1];
-
-                acc_t sum_diag = (acc_t)lb[0][j-1] + (acc_t)lb[0][j+1] +
-                                 (acc_t)lb[2][j-1] + (acc_t)lb[2][j+1];
-
-                acc_t center   = (acc_t)lb[1][j];
-
-                buf[wr][i][j]  = (data_t)(
-                                     (acc_t)wc * center +
-                                     (acc_t)wa * sum_axis +
-                                     (acc_t)wd * sum_diag
-                                 );
-            }
-
-            // Right boundary
-            buf[wr][i][NY-1] = buf[rd][i][NY-1];
-
-            // Slide line buffer: lb[0] <- lb[1], lb[1] <- lb[2]
+            // Slide lb down one row
             SLIDE: for (int j = 0; j < NY; j++) {
-#pragma HLS pipeline II=1
+    #pragma HLS pipeline II=1
                 lb[0][j] = lb[1][j];
                 lb[1][j] = lb[2][j];
             }
-        }
-
-        // -------------------------------------------------------
-        // Copy bottom boundary row unchanged
-        // -------------------------------------------------------
-        BOT_BOUNDARY: for (int j = 0; j < NY; j++) {
-#pragma HLS pipeline II=1
-            buf[wr][NX-1][j] = buf[rd][NX-1][j];
         }
     }
 
