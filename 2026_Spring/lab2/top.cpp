@@ -37,8 +37,8 @@ void top_kernel(const data_t A_in[NX][NY], data_t A_out[NX][NY]) {
         int wr = 1 - rd;      // alternates 1, 0, 1, 0...
 
         STENCIL_I: for (int i = 0; i < NX; i++) {
+#pragma HLS pipeline II=1
             STENCIL_J: for (int j = 0; j < NY; j++) {
-                #pragma HLS pipeline II=1
                 #pragma HLS dependence variable=buf inter false
                 if (i == 0 || i == NX-1 || j == 0 || j == NY-1) {
                     buf[wr][i][j] = buf[rd][i][j];
