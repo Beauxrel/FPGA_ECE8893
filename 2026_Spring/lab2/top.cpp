@@ -31,69 +31,33 @@ void top_kernel(const data_t A_in[NX][NY], data_t A_out[NX][NY]) {
         }
     }
 
-    // =========================================================
-    // Time stepping with line buffer
-    // =========================================================
+    // Time stepping
     TIME: for (int t = 0; t < TSTEPS; t++) {
-        const int rd = t & 1;
-        const int wr = 1 - rd;
+        int rd = t & 1;       // alternates 0, 1, 0, 1...
+        int wr = 1 - rd;      // alternates 1, 0, 1, 0...
 
-        static data_t lb[3][NY];
-    #pragma HLS array_partition variable=lb complete dim=1
-    #pragma HLS array_partition variable=lb cyclic factor=16 dim=2
-
-        // Copy boundaries
-        TOP_BOUNDARY: for (int j = 0; j < NY; j++) {
-    #pragma HLS pipeline II=1
-            buf[wr][0][j]    = buf[rd][0][j];
-            buf[wr][NX-1][j] = buf[rd][NX-1][j];
-        }
-
-        // Prime lb with first two rows
-        PRIME: for (int j = 0; j < NY; j++) {
-    #pragma HLS pipeline II=1
-            lb[0][j] = buf[rd][0][j];
-            lb[1][j] = buf[rd][1][j];
-        }
-
-        // Outer row loop — NOT pipelined, inner j loop IS
-        STENCIL_I: for (int i = 1; i < NX-1; i++) {
-
-            // Single j loop: load lb[2], compute, write — all at II=1
+        STENCIL_I: for (int i = 0; i < NX; i++) {
             STENCIL_J: for (int j = 0; j < NY; j++) {
-    #pragma HLS pipeline II=1
-    #pragma HLS dependence variable=lb inter false
-    #pragma HLS dependence variable=buf inter false
-
-                data_t new_row = buf[rd][i+1][j];
-                lb[2][j] = new_row;
-
-                if (j == 0 || j == NY-1) {
+                #pragma HLS pipeline II=1
+                #pragma HLS dependence variable=buf inter false
+                if (i == 0 || i == NX-1 || j == 0 || j == NY-1) {
                     buf[wr][i][j] = buf[rd][i][j];
                 } else {
-                    acc_t sum_axis = (acc_t)lb[0][j]   + (acc_t)lb[2][j]   +
-                                    (acc_t)lb[1][j-1] + (acc_t)lb[1][j+1];
-
-                    acc_t sum_diag = (acc_t)lb[0][j-1] + (acc_t)lb[0][j+1] +
-                                    (acc_t)lb[2][j-1] + (acc_t)lb[2][j+1];
-
-                    acc_t center   = (acc_t)lb[1][j];
-
+                    acc_t sum_axis =
+                        (acc_t)buf[rd][i-1][j] + (acc_t)buf[rd][i+1][j] +
+                        (acc_t)buf[rd][i][j-1] + (acc_t)buf[rd][i][j+1];
+                    acc_t sum_diag =
+                        (acc_t)buf[rd][i-1][j-1] + (acc_t)buf[rd][i-1][j+1] +
+                        (acc_t)buf[rd][i+1][j-1] + (acc_t)buf[rd][i+1][j+1];
+                    acc_t center = (acc_t)buf[rd][i][j];
                     buf[wr][i][j] = (data_t)(
-                                        (acc_t)wc * center +
-                                        (acc_t)wa * sum_axis +
-                                        (acc_t)wd * sum_diag
-                                    );
+                        (acc_t)wc * center +
+                        (acc_t)wa * sum_axis +
+                        (acc_t)wd * sum_diag);
                 }
             }
-
-            // Slide lb down one row
-            SLIDE: for (int j = 0; j < NY; j++) {
-    #pragma HLS pipeline II=1
-                lb[0][j] = lb[1][j];
-                lb[1][j] = lb[2][j];
-            }
         }
+        // No swap loop needed — rd/wr flip for free next iteration
     }
 
     // =========================================================
