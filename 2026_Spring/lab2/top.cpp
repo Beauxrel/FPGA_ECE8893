@@ -3,30 +3,30 @@
 static data_t buf0[NX][NY];
 static data_t buf1[NX][NY];
 
-static data_t row_prev[NY];
-static data_t row_curr[NY];
-static data_t row_next[NY];
-
 static void stencil_pass(data_t rd[NX][NY], data_t wr[NX][NY])
 {
 #pragma HLS inline off
 #pragma HLS array_partition variable = rd cyclic factor = 16 dim = 2
 #pragma HLS array_partition variable = wr cyclic factor = 16 dim = 2
-#pragma HLS array_partition variable = row_prev cyclic factor = 16 dim = 1
-#pragma HLS array_partition variable = row_curr cyclic factor = 16 dim = 1
-#pragma HLS array_partition variable = row_next cyclic factor = 16 dim = 1
 
     const acc_t wc = (acc_t)0.50;
     const acc_t wa = (acc_t)0.10;
     const acc_t wd = (acc_t)0.025;
 
-PRELOAD:
+    // Local (non-static) line buffers → HLS maps to URAMs/LUT-RAM, not shared BRAMs
+    data_t lb0[NY], lb1[NY], lb2[NY];
+#pragma HLS array_partition variable = lb0 cyclic factor = 16 dim = 1
+#pragma HLS array_partition variable = lb1 cyclic factor = 16 dim = 1
+#pragma HLS array_partition variable = lb2 cyclic factor = 16 dim = 1
+
+// Prime the pump: load rows 0 and 1
+PRIME:
     for (int j = 0; j < NY; j++)
     {
 #pragma HLS pipeline II = 1
-        row_prev[j] = rd[0][j];
-        row_curr[j] = rd[0][j];
-        row_next[j] = rd[1][j];
+        lb0[j] = rd[0][j];
+        lb1[j] = rd[0][j]; // lb0 = lb1 = row0; lb2 will be row1 after first LOAD
+        lb2[j] = rd[1][j];
     }
 
 STENCIL_I:
@@ -34,40 +34,39 @@ STENCIL_I:
     {
 #pragma HLS loop_tripcount min = NX max = NX
 
-    STENCIL_J:
-        for (int j = 0; j < NY; j++)
-        {
-#pragma HLS pipeline II = 1
-#pragma HLS dependence variable = row_prev inter false
-#pragma HLS dependence variable = row_curr inter false
-#pragma HLS dependence variable = row_next inter false
-            if (i == 0 || i == NX - 1 || j == 0 || j == NY - 1)
-            {
-                wr[i][j] = row_curr[j];
-            }
-            else
-            {
-                acc_t sum_axis =
-                    (acc_t)row_prev[j] + (acc_t)row_next[j] +
-                    (acc_t)row_curr[j - 1] + (acc_t)row_curr[j + 1];
-                acc_t sum_diag =
-                    (acc_t)row_prev[j - 1] + (acc_t)row_prev[j + 1] +
-                    (acc_t)row_next[j - 1] + (acc_t)row_next[j + 1];
-                acc_t center = (acc_t)row_curr[j];
-                wr[i][j] = (data_t)(wc * center +
-                                    wa * sum_axis +
-                                    wd * sum_diag);
-            }
-        }
-
-        int next_row = (i + 2 < NX) ? (i + 2) : (NX - 1);
+        // 1) Rotate: prev=lb0←lb1, curr=lb1←lb2, next=lb2←rd[i+2]
+        int load_row = (i + 2 < NX) ? (i + 2) : (NX - 1);
     ROTATE:
         for (int j = 0; j < NY; j++)
         {
 #pragma HLS pipeline II = 1
-            row_prev[j] = row_curr[j];
-            row_curr[j] = row_next[j];
-            row_next[j] = rd[next_row][j];
+            lb0[j] = lb1[j];
+            lb1[j] = lb2[j];
+            lb2[j] = rd[load_row][j];
+        }
+
+    // 2) Compute stencil for row i (lb0=prev, lb1=curr, lb2=next)
+    STENCIL_J:
+        for (int j = 0; j < NY; j++)
+        {
+#pragma HLS pipeline II = 1
+#pragma HLS dependence variable = lb0 inter false
+#pragma HLS dependence variable = lb1 inter false
+#pragma HLS dependence variable = lb2 inter false
+            if (i == 0 || i == NX - 1 || j == 0 || j == NY - 1)
+            {
+                wr[i][j] = lb1[j];
+            }
+            else
+            {
+                acc_t sum_axis =
+                    (acc_t)lb0[j] + (acc_t)lb2[j] +
+                    (acc_t)lb1[j - 1] + (acc_t)lb1[j + 1];
+                acc_t sum_diag =
+                    (acc_t)lb0[j - 1] + (acc_t)lb0[j + 1] +
+                    (acc_t)lb2[j - 1] + (acc_t)lb2[j + 1];
+                wr[i][j] = (data_t)(wc * (acc_t)lb1[j] + wa * sum_axis + wd * sum_diag);
+            }
         }
     }
 }
@@ -83,7 +82,6 @@ void top_kernel(const data_t A_in[NX][NY], data_t A_out[NX][NY])
 INIT_I:
     for (int i = 0; i < NX; i++)
     {
-#pragma HLS loop_tripcount min = NX max = NX
     INIT_J:
         for (int j = 0; j < NY; j++)
         {
@@ -97,13 +95,9 @@ TIME:
     {
 #pragma HLS loop_tripcount min = TSTEPS max = TSTEPS
         if (t & 1)
-        {
             stencil_pass(buf1, buf0);
-        }
         else
-        {
             stencil_pass(buf0, buf1);
-        }
     }
 
     data_t(*final_buf)[NY] = (TSTEPS & 1) ? buf1 : buf0;
@@ -111,7 +105,6 @@ TIME:
 OUT_I:
     for (int i = 0; i < NX; i++)
     {
-#pragma HLS loop_tripcount min = NX max = NX
     OUT_J:
         for (int j = 0; j < NY; j++)
         {
