@@ -5,7 +5,6 @@ static data_t buf1[NX][NY];
 #pragma HLS array_partition variable = buf0 cyclic factor = 16 dim = 2
 #pragma HLS array_partition variable = buf1 cyclic factor = 16 dim = 2
 
-// Row cache arrays at file scope to avoid stale static-local state
 static data_t row_prev[NY];
 static data_t row_curr[NY];
 static data_t row_next[NY];
@@ -16,21 +15,20 @@ static data_t row_next[NY];
 static void stencil_pass(data_t rd[NX][NY], data_t wr[NX][NY])
 {
 #pragma HLS inline off
-#pragma HLS array_partition variable = rd cyclic factor = 16 dim = 2
-#pragma HLS array_partition variable = wr cyclic factor = 16 dim = 2
-
     const acc_t wc = (acc_t)0.50;
     const acc_t wa = (acc_t)0.10;
     const acc_t wd = (acc_t)0.025;
 
-// Preload row 0 and row 1 before the main loop
-PRELOAD_CURR:
+// Preload: prev=row0, curr=row0, next=row1
+// So that when i=0 runs, curr=row0 and next=row1 are correct.
+// prev is unused for i=0 (boundary), so it can be anything.
+PRELOAD:
     for (int j = 0; j < NY; j++)
     {
 #pragma HLS pipeline II = 1
-        row_curr[j] = rd[0][j];
-        row_next[j] = rd[1][j];
-        row_prev[j] = rd[0][j]; // prev for i=0 is unused (boundary), init safely
+        row_prev[j] = rd[0][j]; // unused for i=0 boundary, but safe
+        row_curr[j] = rd[0][j]; // correct current row for i=0
+        row_next[j] = rd[1][j]; // correct next row for i=0
     }
 
 STENCIL_I:
@@ -38,19 +36,7 @@ STENCIL_I:
     {
 #pragma HLS loop_tripcount min = NX max = NX
 
-        // First: load next row into row_next (i+2), or clamp at last row
-        int next_row = (i + 2 < NX) ? (i + 2) : (NX - 1);
-    LOAD_NEXT:
-        for (int j = 0; j < NY; j++)
-        {
-#pragma HLS pipeline II = 1
-            // Rotate: prev <- curr, curr <- next, next <- rd[next_row]
-            row_prev[j] = row_curr[j];
-            row_curr[j] = row_next[j];
-            row_next[j] = rd[next_row][j];
-        }
-
-    // Now apply stencil using the rotated cache
+    // Apply stencil FIRST using current cache state
     STENCIL_J:
         for (int j = 0; j < NY; j++)
         {
@@ -76,6 +62,18 @@ STENCIL_I:
                                     wd * sum_diag);
             }
         }
+
+        // THEN rotate cache to prepare for i+1
+        // next row to load is i+2, clamped to NX-1
+        int next_row = (i + 2 < NX) ? (i + 2) : (NX - 1);
+    ROTATE:
+        for (int j = 0; j < NY; j++)
+        {
+#pragma HLS pipeline II = 1
+            row_prev[j] = row_curr[j];
+            row_curr[j] = row_next[j];
+            row_next[j] = rd[next_row][j];
+        }
     }
 }
 
@@ -85,9 +83,6 @@ void top_kernel(const data_t A_in[NX][NY], data_t A_out[NX][NY])
 #pragma HLS interface m_axi port = A_out offset = slave bundle = gmem1 depth = 16384
 #pragma HLS interface s_axilite port = return
 
-// =========================================================
-// Direct copy — no bit-mangling, avoids the 24-bit truncation bug
-// =========================================================
 INIT_I:
     for (int i = 0; i < NX; i++)
     {
@@ -100,9 +95,6 @@ INIT_I:
         }
     }
 
-// =========================================================
-// Time stepping
-// =========================================================
 TIME:
     for (int t = 0; t < TSTEPS; t++)
     {
@@ -117,9 +109,6 @@ TIME:
         }
     }
 
-    // =========================================================
-    // Write output from whichever buffer was written last
-    // =========================================================
     data_t(*final_buf)[NY] = (TSTEPS & 1) ? buf1 : buf0;
 
 OUT_I:
