@@ -70,7 +70,7 @@ void top_kernel(const data_t A_in[NX][NY], data_t A_out[NX][NY]) {
 #pragma HLS pipeline II=1
         ap_uint<512> chunk = 0;
         for (int k = 0; k < 16; k++) {
-#pragma HLS unroll factor = 8
+#pragma HLS unroll factor = 16
             int idx = i * 16 + k;
             data_t val = buf[final_buf][idx / NY][idx % NY];
             ap_uint<32> packed = 0;
