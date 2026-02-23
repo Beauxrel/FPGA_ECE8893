@@ -98,7 +98,7 @@ INIT_I:
 TIME:
     for (int t = 0; t < TSTEPS; t++)
     {
-#pragma HLS loop_tripcount min = TSTEPS max = TSTEPS
+#pragma HLS pipeline II = 1
         if (t & 1)
             stencil_pass(buf1, buf0);
         else
