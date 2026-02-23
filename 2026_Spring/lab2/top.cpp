@@ -39,7 +39,7 @@ void top_kernel(const data_t A_in[NX][NY], data_t A_out[NX][NY]) {
         STENCIL_I: for (int i = 0; i < NX; i++) {
             STENCIL_J: for (int j = 0; j < NY; j++) {
                 #pragma HLS pipeline II=1
-                #pragma HLS unroll factor = 8
+                #pragma HLS unroll factor = 16
                 #pragma HLS dependence variable=buf inter false
                 if (i == 0 || i == NX-1 || j == 0 || j == NY-1) {
                     buf[wr][i][j] = buf[rd][i][j];
