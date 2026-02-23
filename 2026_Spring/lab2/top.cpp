@@ -34,13 +34,14 @@ PRIME:
 STENCIL_I:
     for (int i = 0; i < NX; i++)
     {
-#pragma HLS loop_tripcount min = NX max = NX
+// #pragma HLS loop_tripcount min = NX max = NX
+#pragma HLS pipeline II = 1
 
     // 1) COMPUTE stencil for row i using current lb0/lb1/lb2
     STENCIL_J:
         for (int j = 0; j < NY; j++)
         {
-#pragma HLS pipeline II = 1
+// #pragma HLS pipeline II = 1
 #pragma HLS dependence variable = lb0 inter false
 #pragma HLS dependence variable = lb1 inter false
 #pragma HLS dependence variable = lb2 inter false
@@ -98,7 +99,7 @@ INIT_I:
 TIME:
     for (int t = 0; t < TSTEPS; t++)
     {
-#pragma HLS pipeline
+#pragma HLS loop_tripcount min = TSTEPS max = TSTEPS
         if (t & 1)
             stencil_pass(buf1, buf0);
         else
