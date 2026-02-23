@@ -6,17 +6,17 @@ static data_t buf1[NX][NY];
 static void stencil_pass(data_t rd[NX][NY], data_t wr[NX][NY])
 {
 #pragma HLS inline off
-#pragma HLS array_partition variable = rd cyclic factor = 8 dim = 2
-#pragma HLS array_partition variable = wr cyclic factor = 8 dim = 2
+#pragma HLS array_partition variable = rd cyclic factor = 4 dim = 2
+#pragma HLS array_partition variable = wr cyclic factor = 4 dim = 2
 
     const acc_t wc = (acc_t)0.50;
     const acc_t wa = (acc_t)0.10;
     const acc_t wd = (acc_t)0.025;
 
     data_t lb0[NY], lb1[NY], lb2[NY];
-#pragma HLS array_partition variable = lb0 cyclic factor = 8 dim = 1
-#pragma HLS array_partition variable = lb1 cyclic factor = 8 dim = 1
-#pragma HLS array_partition variable = lb2 cyclic factor = 8 dim = 1
+#pragma HLS array_partition variable = lb0 cyclic factor = 4 dim = 1
+#pragma HLS array_partition variable = lb1 cyclic factor = 4 dim = 1
+#pragma HLS array_partition variable = lb2 cyclic factor = 4 dim = 1
 
 // After PRIME: lb0=row0(prev, unused for i=0 boundary)
 //              lb1=row0(curr for i=0)
@@ -35,13 +35,13 @@ STENCIL_I:
     for (int i = 0; i < NX; i++)
     {
 // #pragma HLS loop_tripcount min = NX max = NX
-#pragma HLS pipeline II = 1
 
     // 1) COMPUTE stencil for row i using current lb0/lb1/lb2
     STENCIL_J:
         for (int j = 0; j < NY; j++)
         {
-// #pragma HLS pipeline II = 1
+#pragma HLS pipeline II = 1
+#pragma HLS unroll factor = 4
 #pragma HLS dependence variable = lb0 inter false
 #pragma HLS dependence variable = lb1 inter false
 #pragma HLS dependence variable = lb2 inter false
@@ -82,8 +82,8 @@ void top_kernel(const data_t A_in[NX][NY], data_t A_out[NX][NY])
 #pragma HLS interface m_axi port = A_in offset = slave bundle = gmem0 depth = 16384
 #pragma HLS interface m_axi port = A_out offset = slave bundle = gmem1 depth = 16384
 #pragma HLS interface s_axilite port = return
-#pragma HLS array_partition variable = buf0 cyclic factor = 8 dim = 2
-#pragma HLS array_partition variable = buf1 cyclic factor = 8 dim = 2
+#pragma HLS array_partition variable = buf0 cyclic factor = 4 dim = 2
+#pragma HLS array_partition variable = buf1 cyclic factor = 4 dim = 2
 
 INIT_I:
     for (int i = 0; i < NX; i++)
