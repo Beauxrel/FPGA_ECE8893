@@ -98,7 +98,7 @@ INIT_I:
 TIME:
     for (int t = 0; t < TSTEPS; t++)
     {
-#pragma HLS pipeline II = 1
+#pragma HLS pipeline
         if (t & 1)
             stencil_pass(buf1, buf0);
         else
