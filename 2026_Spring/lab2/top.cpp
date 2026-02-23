@@ -1,14 +1,19 @@
 #include "dcl.h"
 
-// Ping-pong buffers split apart so HLS sees static indexing
 static data_t buf0[NX][NY];
 static data_t buf1[NX][NY];
 #pragma HLS array_partition variable = buf0 cyclic factor = 16 dim = 2
 #pragma HLS array_partition variable = buf1 cyclic factor = 16 dim = 2
 
-static void stencil_pass(
-    data_t rd[NX][NY],
-    data_t wr[NX][NY])
+// Row cache arrays at file scope to avoid stale static-local state
+static data_t row_prev[NY];
+static data_t row_curr[NY];
+static data_t row_next[NY];
+#pragma HLS array_partition variable = row_prev cyclic factor = 16 dim = 1
+#pragma HLS array_partition variable = row_curr cyclic factor = 16 dim = 1
+#pragma HLS array_partition variable = row_next cyclic factor = 16 dim = 1
+
+static void stencil_pass(data_t rd[NX][NY], data_t wr[NX][NY])
 {
 #pragma HLS inline off
 #pragma HLS array_partition variable = rd cyclic factor = 16 dim = 2
@@ -18,36 +23,34 @@ static void stencil_pass(
     const acc_t wa = (acc_t)0.10;
     const acc_t wd = (acc_t)0.025;
 
-    // Row cache: keep 3 rows in registers/BRAMs for sliding window
-    static data_t row_prev[NY];
-    static data_t row_curr[NY];
-    static data_t row_next[NY];
-#pragma HLS array_partition variable = row_prev cyclic factor = 16 dim = 1
-#pragma HLS array_partition variable = row_curr cyclic factor = 16 dim = 1
-#pragma HLS array_partition variable = row_next cyclic factor = 16 dim = 1
-
-// Preload first two rows
-PRELOAD:
+// Preload row 0 and row 1 before the main loop
+PRELOAD_CURR:
     for (int j = 0; j < NY; j++)
     {
 #pragma HLS pipeline II = 1
         row_curr[j] = rd[0][j];
         row_next[j] = rd[1][j];
+        row_prev[j] = rd[0][j]; // prev for i=0 is unused (boundary), init safely
     }
 
 STENCIL_I:
     for (int i = 0; i < NX; i++)
     {
-    // Rotate row cache
-    ROTATE:
+#pragma HLS loop_tripcount min = NX max = NX
+
+        // First: load next row into row_next (i+2), or clamp at last row
+        int next_row = (i + 2 < NX) ? (i + 2) : (NX - 1);
+    LOAD_NEXT:
         for (int j = 0; j < NY; j++)
         {
 #pragma HLS pipeline II = 1
+            // Rotate: prev <- curr, curr <- next, next <- rd[next_row]
             row_prev[j] = row_curr[j];
             row_curr[j] = row_next[j];
-            row_next[j] = (i + 2 < NX) ? rd[i + 2][j] : rd[i][j]; // clamp
+            row_next[j] = rd[next_row][j];
         }
 
+    // Now apply stencil using the rotated cache
     STENCIL_J:
         for (int j = 0; j < NY; j++)
         {
@@ -82,30 +85,23 @@ void top_kernel(const data_t A_in[NX][NY], data_t A_out[NX][NY])
 #pragma HLS interface m_axi port = A_out offset = slave bundle = gmem1 depth = 16384
 #pragma HLS interface s_axilite port = return
 
-    ap_uint<512> *A_IN_WIDE = (ap_uint<512> *)A_in;
-    ap_uint<512> *A_OUT_WIDE = (ap_uint<512> *)A_out;
-
 // =========================================================
-// Unpack input into buf0
+// Direct copy — no bit-mangling, avoids the 24-bit truncation bug
 // =========================================================
 INIT_I:
-    for (int i = 0; i < NX * NY / 16; i++)
+    for (int i = 0; i < NX; i++)
     {
-#pragma HLS pipeline II = 1
-        ap_uint<512> chunk = A_IN_WIDE[i];
-        for (int k = 0; k < 16; k++)
+#pragma HLS loop_tripcount min = NX max = NX
+    INIT_J:
+        for (int j = 0; j < NY; j++)
         {
-#pragma HLS unroll
-            int idx = i * 16 + k;
-            ap_uint<32> tmp = chunk.range(32 * k + 31, 32 * k);
-            data_t val;
-            val.range(23, 0) = tmp.range(23, 0);
-            buf0[idx / NY][idx % NY] = val;
+#pragma HLS pipeline II = 1
+            buf0[i][j] = A_in[i][j];
         }
     }
 
 // =========================================================
-// Time stepping — statically alternating, no runtime rd/wr
+// Time stepping
 // =========================================================
 TIME:
     for (int t = 0; t < TSTEPS; t++)
@@ -122,24 +118,19 @@ TIME:
     }
 
     // =========================================================
-    // Pack output
+    // Write output from whichever buffer was written last
     // =========================================================
     data_t(*final_buf)[NY] = (TSTEPS & 1) ? buf1 : buf0;
 
 OUT_I:
-    for (int i = 0; i < NX * NY / 16; i++)
+    for (int i = 0; i < NX; i++)
     {
-#pragma HLS pipeline II = 1
-        ap_uint<512> chunk = 0;
-        for (int k = 0; k < 16; k++)
+#pragma HLS loop_tripcount min = NX max = NX
+    OUT_J:
+        for (int j = 0; j < NY; j++)
         {
-#pragma HLS unroll
-            int idx = i * 16 + k;
-            data_t val = final_buf[idx / NY][idx % NY];
-            ap_uint<32> packed = 0;
-            packed.range(23, 0) = val.range(23, 0);
-            chunk.range(32 * k + 31, 32 * k) = packed;
+#pragma HLS pipeline II = 1
+            A_out[i][j] = final_buf[i][j];
         }
-        A_OUT_WIDE[i] = chunk;
     }
 }
