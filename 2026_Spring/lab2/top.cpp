@@ -13,19 +13,21 @@ static void stencil_pass(data_t rd[NX][NY], data_t wr[NX][NY])
     const acc_t wa = (acc_t)0.10;
     const acc_t wd = (acc_t)0.025;
 
-    // Local (non-static) line buffers → HLS maps to URAMs/LUT-RAM, not shared BRAMs
     data_t lb0[NY], lb1[NY], lb2[NY];
 #pragma HLS array_partition variable = lb0 cyclic factor = 16 dim = 1
 #pragma HLS array_partition variable = lb1 cyclic factor = 16 dim = 1
 #pragma HLS array_partition variable = lb2 cyclic factor = 16 dim = 1
 
-// Prime the pump: load rows 0 and 1
+// After PRIME: lb0=row0(prev, unused for i=0 boundary)
+//              lb1=row0(curr for i=0)
+//              lb2=row1(next for i=0)
+// This is exactly correct for computing i=0 immediately.
 PRIME:
     for (int j = 0; j < NY; j++)
     {
 #pragma HLS pipeline II = 1
         lb0[j] = rd[0][j];
-        lb1[j] = rd[0][j]; // lb0 = lb1 = row0; lb2 will be row1 after first LOAD
+        lb1[j] = rd[0][j];
         lb2[j] = rd[1][j];
     }
 
@@ -34,18 +36,7 @@ STENCIL_I:
     {
 #pragma HLS loop_tripcount min = NX max = NX
 
-        // 1) Rotate: prev=lb0←lb1, curr=lb1←lb2, next=lb2←rd[i+2]
-        int load_row = (i + 2 < NX) ? (i + 2) : (NX - 1);
-    ROTATE:
-        for (int j = 0; j < NY; j++)
-        {
-#pragma HLS pipeline II = 1
-            lb0[j] = lb1[j];
-            lb1[j] = lb2[j];
-            lb2[j] = rd[load_row][j];
-        }
-
-    // 2) Compute stencil for row i (lb0=prev, lb1=curr, lb2=next)
+    // 1) COMPUTE stencil for row i using current lb0/lb1/lb2
     STENCIL_J:
         for (int j = 0; j < NY; j++)
         {
@@ -67,6 +58,20 @@ STENCIL_I:
                     (acc_t)lb2[j - 1] + (acc_t)lb2[j + 1];
                 wr[i][j] = (data_t)(wc * (acc_t)lb1[j] + wa * sum_axis + wd * sum_diag);
             }
+        }
+
+        // 2) ROTATE after compute: prepare lb0/lb1/lb2 for row i+1
+        //    lb0 <- lb1 (was curr, becomes prev)
+        //    lb1 <- lb2 (was next, becomes curr)
+        //    lb2 <- rd[i+2] (load the new next row)
+        int load_row = (i + 2 < NX) ? (i + 2) : (NX - 1);
+    ROTATE:
+        for (int j = 0; j < NY; j++)
+        {
+#pragma HLS pipeline II = 1
+            lb0[j] = lb1[j];
+            lb1[j] = lb2[j];
+            lb2[j] = rd[load_row][j];
         }
     }
 }
