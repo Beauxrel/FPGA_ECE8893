@@ -13,8 +13,8 @@ void top_kernel(const data_t A_in[NX][NY], data_t A_out[NX][NY]) {
     const data_t wd = (data_t)0.025;
 
     static data_t buf[2][NX][NY];
-#pragma HLS array_partition variable=buf cyclic factor=32 dim=3
-#pragma HLS array_partition variable=buf cyclic factor=32 dim=2
+#pragma HLS array_partition variable=buf cyclic factor=16 dim=3
+#pragma HLS array_partition variable=buf cyclic factor=16 dim=2
 
     // =========================================================
     // Unpack input into buf[0]
